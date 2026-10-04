@@ -38,7 +38,7 @@ public partial class MainViewModel : ViewModelBase
         Party = new PartyViewModel(data);
         Rotation = new RotationViewModel(data);
         Roster = new RosterViewModel(data);
-        Settings = new SettingsViewModel(Update, data, ApplyData);
+        Settings = new SettingsViewModel(Update, data, ApplyData, Roster.RefreshLimit);
         NavItems = new List<NavItemViewModel>
         {
             new NavItemViewModel("캐릭터 명단", ROSTER_ICON, Roster),

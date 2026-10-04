@@ -12,7 +12,7 @@ public class RosterServiceTests
     [Fact]
     public void Parse_TabAndCommaRows_ReadsBothAndSkipsBadOrOutOfRangeLines()
     {
-        string text = "1, 철벽, 수호성, 36210, 3820, Y\n2\t그림자\tassassin\t38050\t4010\tN\n잘못된 줄\n11, 범위밖, 궁성, 30000, 3000, N";
+        string text = "1, 철벽, 수호성, 36210, 3820, Y\n2\t그림자\tassassin\t38050\t4010\tN\n잘못된 줄\n0, 범위밖, 궁성, 30000, 3000, N";
 
         int skipped;
         List<CharacterData> parsed = RosterService.Parse(text, DATA, out skipped);
@@ -23,6 +23,25 @@ public class RosterServiceTests
         Assert.Equal("assassin", parsed[1].ClassId);
         Assert.Equal(2, parsed[1].Number);
         Assert.Equal(2, skipped);
+    }
+
+    [Fact]
+    public void Format_ThenParse_RoundTripsWithTheHeaderSkipped()
+    {
+        int skipped;
+        List<CharacterData> original = RosterService.Parse("2, 부캐, 치유성, -, 3700, N\n2, 본캐, 수호성, 36210, -, Y", DATA, out skipped);
+
+        string text = RosterService.Format(original, DATA);
+        List<CharacterData> parsed = RosterService.Parse(text, DATA, out skipped);
+
+        Assert.StartsWith(RosterService.HEADER, text);
+        Assert.Equal(0, skipped);
+        Assert.Equal(2, parsed.Count);
+        Assert.Equal("본캐", parsed[0].Name);
+        Assert.True(parsed[0].IsMain);
+        Assert.Null(parsed[0].ItemLevel);
+        Assert.Equal("cleric", parsed[1].ClassId);
+        Assert.Null(parsed[1].CombatPower);
     }
 
     [Fact]

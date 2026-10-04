@@ -11,6 +11,11 @@ namespace Aion2Tools.ViewModels;
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly Action<GameDataTable> _applyData;
+    private readonly Action _applyGroupLimit;
+
+    public int MinMaxGroupCount => AppSettings.MIN_MAX_GROUP_COUNT;
+
+    public int MaxMaxGroupCount => AppSettings.MAX_MAX_GROUP_COUNT;
 
     public UpdateViewModel Update { get; }
 
@@ -47,10 +52,23 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    public SettingsViewModel(UpdateViewModel update, GameDataTable data, Action<GameDataTable> applyData)
+    public int MaxGroupCount
+    {
+        get => SettingsService.Settings.MaxGroupCount;
+        set
+        {
+            SettingsService.Settings.MaxGroupCount = Math.Clamp(value, AppSettings.MIN_MAX_GROUP_COUNT, AppSettings.MAX_MAX_GROUP_COUNT);
+            SettingsService.ScheduleSave();
+            _applyGroupLimit();
+            OnPropertyChanged();
+        }
+    }
+
+    public SettingsViewModel(UpdateViewModel update, GameDataTable data, Action<GameDataTable> applyData, Action applyGroupLimit)
     {
         Update = update;
         _applyData = applyData;
+        _applyGroupLimit = applyGroupLimit;
         ShowDataVersion(data);
     }
 

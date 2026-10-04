@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Aion2Tools.Models;
 
 namespace Aion2Tools.Services;
 
-/// <summary>Turns pasted text into roster characters.</summary>
+/// <summary>Reads and writes the roster as CSV.</summary>
 public static class RosterService
 {
-    /// <summary>One character per line: number (1-10), name, class, combat power, item level, main (Y/N).
+    public const string HEADER = "번호,이름,클래스,전투력,아이템 레벨,본캐";
+
+    /// <summary>One character per line: number, name, class, combat power, item level, main (Y/N).
     /// Combat power and item level may be "-" or empty for not entered.
-    /// Commas or tabs, so rows pasted from a spreadsheet work. Lines that do not parse are counted, not thrown.</summary>
+    /// Commas or tabs, so spreadsheet rows work. The header line is skipped; other lines that do not parse are counted, not thrown.</summary>
     public static List<CharacterData> Parse(string text, GameDataTable data, out int skipped)
     {
         List<CharacterData> characters = new List<CharacterData>();
@@ -18,7 +21,7 @@ public static class RosterService
         foreach (string rawLine in text.Split('\n'))
         {
             string line = rawLine.Trim();
-            if (line.Length == 0)
+            if (line.Length == 0 || line.StartsWith("번호"))
             {
                 continue;
             }
@@ -35,6 +38,27 @@ public static class RosterService
         }
 
         return characters;
+    }
+
+    /// <summary>The roster as CSV with a header line, in the shape <see cref="Parse"/> reads back.</summary>
+    public static string Format(IEnumerable<CharacterData> characters, GameDataTable data)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.AppendLine(HEADER);
+        foreach (CharacterData character in characters.OrderBy(character => character.Number).ThenBy(character => !character.IsMain))
+        {
+            ClassRecord? recordOrNull = data.GetClassOrNull(character.ClassId);
+            string className = recordOrNull is null ? character.ClassId : recordOrNull.Name;
+            builder.AppendLine(string.Join(",",
+                character.Number,
+                character.Name.Replace(",", " ").Trim(),
+                className,
+                FormatOptional(character.CombatPower),
+                FormatOptional(character.ItemLevel),
+                character.IsMain ? "Y" : "N"));
+        }
+
+        return builder.ToString();
     }
 
     /// <summary>The class column takes the game data id or the Korean name.</summary>
@@ -60,7 +84,6 @@ public static class RosterService
         if (classId.Length == 0
             || !int.TryParse(cells[0].Trim(), out number)
             || number < CharacterData.MIN_NUMBER
-            || number > CharacterData.MAX_NUMBER
             || !TryParseOptional(cells[3], out combatPower)
             || !TryParseOptional(cells[4], out itemLevel))
         {
@@ -109,6 +132,16 @@ public static class RosterService
                 character.IsMain = character == main;
             }
         }
+    }
+
+    private static string FormatOptional(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return "-";
+        }
+
+        return value.Value.ToString();
     }
 
     private static bool IsYes(string cell)

@@ -21,9 +21,11 @@ public partial class RosterViewModel : ViewModelBase
     /// <summary>What the card wall shows: the groups, then the add tile while there is room for another.</summary>
     public ObservableCollection<ViewModelBase> Tiles { get; } = new ObservableCollection<ViewModelBase>();
 
-    public bool CanAddGroup => Groups.Count < CharacterData.MAX_NUMBER;
+    private static int MaxGroupCount => SettingsService.Settings.MaxGroupCount;
 
-    public string CountText => $"그룹 {Groups.Count}/{CharacterData.MAX_NUMBER} · 캐릭터 {Characters.Count}";
+    public bool CanAddGroup => Groups.Count < MaxGroupCount;
+
+    public string CountText => $"그룹 {Groups.Count}/{MaxGroupCount} · 캐릭터 {Characters.Count}";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
@@ -33,9 +35,6 @@ public partial class RosterViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial IReadOnlyList<ClassRecord> Classes { get; set; }
-
-    [ObservableProperty]
-    public partial string ImportText { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = string.Empty;
@@ -52,6 +51,12 @@ public partial class RosterViewModel : ViewModelBase
     {
         _data = data;
         Classes = data.Classes;
+        RebuildGroups(SelectedNumber());
+    }
+
+    /// <summary>Called when the group limit changes in settings, so the add tile and the count follow it.</summary>
+    public void RefreshLimit()
+    {
         RebuildGroups(SelectedNumber());
     }
 
@@ -77,7 +82,7 @@ public partial class RosterViewModel : ViewModelBase
         }
 
         HashSet<int> used = Groups.Select(group => group.Number).ToHashSet();
-        int number = Enumerable.Range(CharacterData.MIN_NUMBER, CharacterData.MAX_NUMBER).First(candidate => !used.Contains(candidate));
+        int number = Enumerable.Range(CharacterData.MIN_NUMBER, Groups.Count + 1).First(candidate => !used.Contains(candidate));
         Characters.Add(CreateCharacter(number, true));
         RebuildGroups(number);
     }
@@ -120,23 +125,31 @@ public partial class RosterViewModel : ViewModelBase
         SelectedGroupOrNull = null;
     }
 
-    [RelayCommand]
-    private void Import()
+    /// <summary>Replaces the roster with a CSV file's characters. A file with nothing readable leaves the roster alone.</summary>
+    public void Import(string text)
     {
         int skipped;
-        List<CharacterData> parsed = RosterService.Parse(ImportText, _data, out skipped);
+        List<CharacterData> parsed = RosterService.Parse(text, _data, out skipped);
+        if (parsed.Count == 0)
+        {
+            StatusText = "읽을 수 있는 캐릭터가 없습니다.";
+            return;
+        }
+
+        Characters.Clear();
         foreach (CharacterData character in parsed)
         {
             Characters.Add(character);
         }
 
         RosterService.NormalizeMains(Characters);
-        RebuildGroups(SelectedNumber());
-        StatusText = skipped > 0 ? $"{parsed.Count}명 추가 · {skipped}줄은 형식이 맞지 않아 건너뜀" : $"{parsed.Count}명 추가";
-        if (skipped == 0)
-        {
-            ImportText = string.Empty;
-        }
+        RebuildGroups(0);
+        StatusText = skipped > 0 ? $"{parsed.Count}명 불러옴 · {skipped}줄은 형식이 맞지 않아 건너뜀" : $"{parsed.Count}명 불러옴";
+    }
+
+    public string Export()
+    {
+        return RosterService.Format(Characters, _data);
     }
 
     [RelayCommand]

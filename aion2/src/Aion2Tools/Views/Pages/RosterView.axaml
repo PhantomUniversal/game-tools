@@ -106,56 +106,63 @@
                         IsEnabled="{Binding CanAddGroup}" VerticalAlignment="Center" />
             </Grid>
 
-            <ScrollViewer Grid.Row="1">
-                <ItemsControl ItemsSource="{Binding Tiles}" Margin="0,0,0,24">
+            <!-- Columns fill the width (set in code-behind); every tile in a row stretches to that row's height. -->
+            <ScrollViewer Grid.Row="1" SizeChanged="OnCardWallSizeChanged">
+                <ItemsControl x:Name="CardWall" ItemsSource="{Binding Tiles}" Margin="0,0,-14,24">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.DataTemplates>
-                        <!-- A group card: one line per character, icon / kind / name / class, all on the same columns. -->
+                        <!-- A group card: the main as the header, the alts listed under it. -->
                         <DataTemplate DataType="vm:PlayerGroupViewModel">
                             <Border Classes="card clickable" Classes.selected="{Binding IsSelected}"
-                                    Width="300" MinHeight="150" Margin="0,0,14,14" Tapped="OnGroupTapped">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="{Binding Title}" Classes="cardTitle" />
-                                    <Border Classes="rule" />
-                                    <ItemsControl ItemsSource="{Binding Rows}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Spacing="8" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate DataType="vm:CharacterRowViewModel">
-                                                <Grid ColumnDefinitions="40,46,*,Auto">
-                                                    <Image Grid.Column="0" Width="32" Height="32" HorizontalAlignment="Left"
-                                                           Source="{Binding Character.ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
-                                                    <Border Grid.Column="1" Classes="badge" Classes.accent="{Binding Character.IsMain}"
-                                                            HorizontalAlignment="Left">
-                                                        <TextBlock Text="{Binding KindText}" />
-                                                    </Border>
-                                                    <TextBlock Grid.Column="2" Text="{Binding DisplayName}" FontSize="13"
-                                                               Foreground="{StaticResource TextBrightBrush}" VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding ClassName}" Classes="meta"
-                                                               VerticalAlignment="Center" Margin="8,0,0,0" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    Margin="0,0,14,14" Tapped="OnGroupTapped">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Image Grid.Column="0" Width="40" Height="40" Margin="0,0,12,0"
+                                               Source="{Binding Main.Character.ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding Main.DisplayName}" Classes="cardTitle" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Main.ClassName}" Classes="meta" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Classes="badge" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding NumberText}" />
+                                        </Border>
+                                    </Grid>
+                                    <StackPanel Spacing="10" IsVisible="{Binding HasAlts}">
+                                        <Border Classes="rule" />
+                                        <ItemsControl ItemsSource="{Binding Alts}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Spacing="8" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:CharacterRowViewModel">
+                                                    <Grid ColumnDefinitions="40,*,Auto">
+                                                        <Image Grid.Column="0" Width="26" Height="26" HorizontalAlignment="Center"
+                                                               Margin="0,0,12,0"
+                                                               Source="{Binding Character.ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="13"
+                                                                   Foreground="{StaticResource TextLightBrush}" VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding ClassName}" Classes="meta"
+                                                                   VerticalAlignment="Center" Margin="8,0,0,0" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
 
-                        <!-- The solid-outline tile with a plus that makes a new group. -->
+                        <!-- The outline tile that makes a new group; it takes the height of the row it ends up in. -->
                         <DataTemplate DataType="vm:AddGroupTileViewModel">
-                            <Border Classes="addTile" Width="300" Height="150" Margin="0,0,14,14" Tapped="OnAddGroupTapped">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
-                                    <TextBlock Text="+" FontSize="22" HorizontalAlignment="Center" />
-                                    <TextBlock Text="새 그룹" FontSize="12" HorizontalAlignment="Center" />
-                                </StackPanel>
+                            <Border Classes="addTile" MinHeight="70" Margin="0,0,14,14" Tapped="OnAddGroupTapped">
+                                <TextBlock Text="+  새 그룹" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </DataTemplate>
                     </ItemsControl.DataTemplates>
@@ -171,8 +178,13 @@
                 <ScrollViewer IsVisible="{Binding HasSelection}">
                     <StackPanel Margin="16,18,16,24" Spacing="10">
                         <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
-                            <TextBlock Text="{Binding SelectedGroupOrNull.Title, StringFormat='{}{0} 그룹'}" Classes="pageTitle"
-                                       VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedGroupOrNull.Main.DisplayName}" Classes="pageTitle"
+                                           VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis" />
+                                <Border Classes="badge">
+                                    <TextBlock Text="{Binding SelectedGroupOrNull.NumberText}" />
+                                </Border>
+                            </StackPanel>
                             <Button Grid.Column="1" Content="그룹 삭제" Classes="danger tight" Command="{Binding RemoveGroupCommand}" />
                             <Border Grid.Column="2" Classes="rowIcon" Margin="6,0,0,0" Tapped="OnClosePanelTapped">
                                 <Viewbox Width="12" Height="12">
@@ -198,23 +210,14 @@
                 </ScrollViewer>
 
                 <StackPanel Margin="16,18,16,24" Spacing="12" IsVisible="{Binding !HasSelection}">
-                    <TextBlock Text="편집" Classes="pageTitle" />
-                    <Border Classes="foldBox">
-                        <StackPanel>
-                            <Border Classes="foldHeader">
-                                <TextBlock Text="표 / CSV 붙여넣기" />
-                            </Border>
-                            <Border Classes="foldBody">
-                                <StackPanel Spacing="10">
-                                    <TextBox Text="{Binding ImportText}" AcceptsReturn="True" Height="140"
-                                             PlaceholderText="1, 철벽, 수호성, 36210, -, Y" />
-                                    <Button Content="가져오기" Classes="accent" HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Center" Command="{Binding ImportCommand}" />
-                                    <TextBlock Text="{Binding StatusText}" Classes="meta" TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Text="명단 관리" Classes="pageTitle" />
+                    <Grid ColumnDefinitions="*,10,*">
+                        <Button Grid.Column="0" Content="불러오기" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" Click="OnImportClick" />
+                        <Button Grid.Column="2" Content="내보내기" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" Click="OnExportClick" />
+                    </Grid>
+                    <TextBlock Text="{Binding StatusText}" Classes="meta" TextWrapping="Wrap" />
                     <Button Content="명단 비우기" Classes="danger tight" HorizontalAlignment="Left" Command="{Binding ClearCommand}" />
                 </StackPanel>
             </Panel>

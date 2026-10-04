@@ -6,7 +6,6 @@ namespace Aion2Tools.Models;
 public partial class CharacterData : ObservableObject
 {
     public const int MIN_NUMBER = 1;
-    public const int MAX_NUMBER = 10;
 
     /// <summary>Who plays this character. Characters sharing a number are one person's main and alts.</summary>
     [ObservableProperty]

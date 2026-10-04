@@ -4,18 +4,20 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>One numbered group: the person's main, which is always there, and their alts.</summary>
+/// <summary>One numbered group: the person's main, which is always there and names the card, and their alts.</summary>
 public partial class PlayerGroupViewModel : ViewModelBase
 {
     public int Number { get; }
 
-    public string Title => $"{Number}번";
+    public string NumberText => $"#{Number}";
 
     public CharacterRowViewModel Main { get; }
 
     public IReadOnlyList<CharacterRowViewModel> Alts { get; }
 
-    /// <summary>The main then the alts, as the card and the edit panel list them.</summary>
+    public bool HasAlts => Alts.Count > 0;
+
+    /// <summary>The main then the alts, as the edit panel lists them.</summary>
     public IReadOnlyList<CharacterRowViewModel> Rows { get; }
 
     [ObservableProperty]
