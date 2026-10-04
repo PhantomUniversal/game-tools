@@ -13,12 +13,20 @@ public class PartyCardViewModel : ViewModelBase
 
     public string Summary { get; }
 
+    /// <summary>Tank, healer, support and dealer counts, in that order.</summary>
+    public IReadOnlyList<RoleCountViewModel> RoleCounts { get; }
+
     public PartyCardViewModel(PartyModel party, GameDataTable data)
     {
         Title = $"{party.Number}파티";
         bool hasSupport = party.Members.Any(member => data.GetClassOrNull(member.ClassId)!.Role == RoleKind.Support);
         Members = party.Members
             .Select(member => CreateRow(member, data, hasSupport))
+            .ToList();
+        RoleCounts = new[] { RoleKind.Tank, RoleKind.Healer, RoleKind.Support, RoleKind.Dealer }
+            .Select(role => new RoleCountViewModel(
+                $"{MemberRowViewModel.GetRoleText(role)} {party.Members.Count(member => data.GetClassOrNull(member.ClassId)!.Role == role)}",
+                MemberRowViewModel.GetRoleBrush(role)))
             .ToList();
         Summary = $"{party.Members.Count}명 · 합계 {party.TotalCombatPower / 1000.0:0.0}k" + (party.UnknownCount > 0 ? $" · 미입력 {party.UnknownCount}명" : string.Empty);
     }

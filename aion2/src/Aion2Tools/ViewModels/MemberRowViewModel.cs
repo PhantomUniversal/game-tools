@@ -56,7 +56,7 @@ public class MemberRowViewModel : ViewModelBase
         }
     }
 
-    private static IBrush GetRoleBrush(RoleKind role)
+    public static IBrush GetRoleBrush(RoleKind role)
     {
         switch (role)
         {

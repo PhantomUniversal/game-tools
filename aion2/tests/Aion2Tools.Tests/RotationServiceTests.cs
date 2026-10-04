@@ -10,21 +10,27 @@ public class RotationServiceTests
 {
     private static readonly GameDataTable DATA = GameDataService.LoadBuiltIn();
 
+    private static readonly string[] CLASSES = { "guardian", "cleric", "chanter", "assassin", "sorcerer", "gladiator", "cleric", "chanter", "fighter", "ranger" };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // << 원정 >>
+    // * Characters may repeat: each main plays its runs back to back, the mains spread evenly.
+    // ─────────────────────────────────────────────────────────────────────────
     [Fact]
-    public void Compose_FiveMainsAndAltsOverTenExpeditions_EachMainPlaysTwiceAndEveryRunHasOneMain()
+    public void Compose_FiveMainsAndAltsOverTenExpeditions_EachMainPlaysTwoRunsInARowAndEveryRunHasOneMain()
     {
-        PresetRecord preset = DATA.Presets.Single(record => record.Id == "expedition");
+        RotationResult rotation = RotationService.Compose(CreateFivePlayers(), GetPreset("expedition"), DATA, 10, 2, 0);
 
-        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateFivePlayers(), preset, DATA, 10, 2, 0);
-
-        Assert.Equal(10, runs.Count);
-        List<CharacterData> seated = runs.SelectMany(GetMembers).ToList();
-        foreach (CharacterData main in seated.Where(member => member.IsMain).Distinct())
+        Assert.Equal(10, rotation.Runs.Count);
+        Assert.Equal(5, rotation.MainTurns.Count);
+        foreach (IReadOnlyList<MainTurnModel> turn in rotation.MainTurns)
         {
-            Assert.Equal(2, seated.Count(member => member == main));
+            MainTurnModel main = Assert.Single(turn);
+            Assert.True(main.IsBlock);
+            Assert.Equal(main.Runs[0] + 1, main.Runs[1]);
         }
 
-        foreach (PartyResultModel run in runs)
+        foreach (PartyResultModel run in rotation.Runs)
         {
             List<CharacterData> members = GetMembers(run);
             Assert.Equal(5, members.Count);
@@ -34,11 +40,23 @@ public class RotationServiceTests
     }
 
     [Fact]
+    public void Compose_ThreeRunsEachOverTenExpeditions_EachMainPlaysThreeAndRunsHoldOneOrTwoMains()
+    {
+        RotationResult rotation = RotationService.Compose(CreateFivePlayers(), GetPreset("expedition"), DATA, 10, 3, 0);
+
+        List<CharacterData> seated = rotation.Runs.SelectMany(GetMembers).ToList();
+        foreach (CharacterData main in seated.Where(member => member.IsMain).Distinct())
+        {
+            Assert.Equal(3, seated.Count(member => member == main));
+        }
+
+        Assert.All(rotation.Runs, run => Assert.InRange(GetMembers(run).Count(member => member.IsMain), 1, 2));
+    }
+
+    [Fact]
     public void Compose_TwoRuns_MixesMainsAndAltsInEachRun()
     {
-        PresetRecord preset = DATA.Presets.Single(record => record.Id == "expedition");
-
-        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateFivePlayers(), preset, DATA, 2, 1, 0);
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateFivePlayers(), GetPreset("expedition"), DATA, 2, 1, 0).Runs;
 
         Assert.Equal(2, runs.Count);
         foreach (PartyResultModel run in runs)
@@ -50,11 +68,47 @@ public class RotationServiceTests
     }
 
     [Fact]
-    public void Compose_MoreNumbersThanSeats_SeatsOnePerNumberAndSpreadsPlays()
+    public void Compose_PlayerWithOnlyAMain_PlaysJustTheMainRuns()
     {
-        PresetRecord preset = DATA.Presets.Single(record => record.Id == "sanctuary-rudra");
+        List<CharacterData> roster = CreateFivePlayers().Where(character => character.Number != 5 || character.IsMain).ToList();
 
-        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateRoster(), preset, DATA, 3, 1, 0);
+        RotationResult rotation = RotationService.Compose(roster, GetPreset("expedition"), DATA, 10, 2, 0);
+
+        List<CharacterData> seated = rotation.Runs.SelectMany(GetMembers).ToList();
+        Assert.Equal(2, seated.Count(member => member.Number == 5));
+        Assert.All(rotation.Runs, run => Assert.True(GetMembers(run).Count >= 4));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // << 성역 >>
+    // * Each character enters once: mains and alts are mixed so the early runs fill first.
+    // ─────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public void Compose_SanctuaryTenMainsAndAlts_FillsBothRunsWithEveryCharacterOnce()
+    {
+        RotationResult rotation = RotationService.Compose(CreateTenPlayers(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }), GetPreset("sanctuary-rudra"), DATA, 2, 2, 0);
+
+        List<CharacterData> seated = rotation.Runs.SelectMany(GetMembers).ToList();
+        Assert.Equal(seated.Count, seated.Distinct().Count());
+        Assert.Equal(10, GetMembers(rotation.Runs[0]).Count);
+        Assert.Equal(10, GetMembers(rotation.Runs[1]).Count);
+    }
+
+    [Fact]
+    public void Compose_SanctuaryUnevenAlts_FillsTheEarlyRunsFirst()
+    {
+        RotationResult rotation = RotationService.Compose(CreateTenPlayers(new[] { 3, 0, 1, 2, 0, 1, 3, 1, 0, 2 }), GetPreset("sanctuary-rudra"), DATA, 4, 1, 0);
+
+        List<int> counts = rotation.Runs.Select(run => GetMembers(run).Count).ToList();
+        Assert.Equal(23, counts.Sum());
+        Assert.Equal(10, counts[0]);
+        Assert.True(counts.SequenceEqual(counts.OrderByDescending(count => count)), string.Join(",", counts));
+    }
+
+    [Fact]
+    public void Compose_MoreNumbersThanSeats_SeatsOnePerNumberAndEachCharacterOnce()
+    {
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateRoster(), GetPreset("sanctuary-rudra"), DATA, 3, 1, 0).Runs;
 
         Assert.Equal(3, runs.Count);
         foreach (PartyResultModel run in runs)
@@ -65,12 +119,17 @@ public class RotationServiceTests
         }
 
         List<CharacterData> seated = runs.SelectMany(GetMembers).ToList();
-        Assert.All(seated.Where(member => member.IsMain).Distinct(), main => Assert.Equal(1, seated.Count(member => member == main)));
+        Assert.Equal(seated.Count, seated.Distinct().Count());
     }
 
     private static List<CharacterData> GetMembers(PartyResultModel run)
     {
         return run.Parties.SelectMany(party => party.Members).ToList();
+    }
+
+    private static PresetRecord GetPreset(string id)
+    {
+        return DATA.Presets.Single(record => record.Id == id);
     }
 
     /// <summary>Five numbers, each a main and one alt, enough tanks and healers to go around.</summary>
@@ -87,6 +146,22 @@ public class RotationServiceTests
         Add(characters, 4, "번개", "assassin", 26600, 2950, false);
         Add(characters, 5, "주먹왕", "fighter", 34800, 3650, true);
         Add(characters, 5, "주문", "chanter", 27900, 3000, false);
+        return characters;
+    }
+
+    /// <summary>Ten numbers, each a main and the given number of alts.</summary>
+    private static List<CharacterData> CreateTenPlayers(int[] altCounts)
+    {
+        List<CharacterData> characters = new List<CharacterData>();
+        for (int number = 1; number <= 10; number++)
+        {
+            Add(characters, number, $"본{number}", CLASSES[number - 1], 35000, 3500, true);
+            for (int alt = 0; alt < altCounts[number - 1]; alt++)
+            {
+                Add(characters, number, $"부{number}-{alt}", CLASSES[(number + 4 + alt) % 10], 28000, 3000, false);
+            }
+        }
+
         return characters;
     }
 

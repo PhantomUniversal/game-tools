@@ -113,7 +113,7 @@
                     <TextBlock Text="회차" Classes="fieldLabel" />
                     <NumericUpDown Value="{Binding RunCount}" Minimum="1" Maximum="20" FormatString="0" Width="110" />
                 </StackPanel>
-                <StackPanel Margin="0,0,16,8" IsVisible="{Binding IsRotation}">
+                <StackPanel Margin="0,0,16,8" IsVisible="{Binding IsMainRunCountShown}">
                     <TextBlock Text="본캐 출전 횟수" Classes="fieldLabel" />
                     <NumericUpDown Value="{Binding MainRunCount}" Minimum="0" Maximum="20" FormatString="0" Width="110" />
                 </StackPanel>

@@ -31,7 +31,7 @@ public class PartyResultViewModel : ViewModelBase
         Bench = result.Bench.Select(bench => $"{bench.Character.Name} ({GetClassName(bench.Character)}) — {bench.Reason}").ToList();
     }
 
-    /// <summary>Plain text to paste into a chat.</summary>
+    /// <summary>Plain text to paste into a chat: each party and its members' names.</summary>
     public string ToText()
     {
         StringBuilder text = new StringBuilder();
@@ -40,18 +40,7 @@ public class PartyResultViewModel : ViewModelBase
             text.AppendLine($"[{party.Number}파티]");
             foreach (CharacterData member in party.Members)
             {
-                ClassRecord record = _data.GetClassOrNull(member.ClassId)!;
-                string combatPower = member.CombatPower.HasValue ? member.CombatPower.Value.ToString("N0") : "-";
-                text.AppendLine($"- {MemberRowViewModel.GetRoleText(record.Role)} {member.Name} ({record.Name}) {combatPower}");
-            }
-        }
-
-        if (_result.Bench.Count > 0)
-        {
-            text.AppendLine("[대기]");
-            foreach (BenchModel bench in _result.Bench)
-            {
-                text.AppendLine($"- {bench.Character.Name} ({GetClassName(bench.Character)}) {bench.Reason}");
+                text.AppendLine(member.Name);
             }
         }
 

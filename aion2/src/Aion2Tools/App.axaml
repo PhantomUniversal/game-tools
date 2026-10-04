@@ -63,27 +63,49 @@
                     <NumericUpDown Value="{Binding MinCombatPower, Converter={x:Static views:IgnoreNullConverter.Instance}}"
                                    Minimum="0" Increment="1000" FormatString="0" Width="150" />
                 </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="캐릭터당 입장 (0=제한 없음)" Classes="fieldLabel" />
+                    <NumericUpDown Value="{Binding EntryLimit, Converter={x:Static views:IgnoreNullConverter.Instance}}"
+                                   Minimum="0" Maximum="20" FormatString="0" Width="150" />
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
-        <!-- One composition: party cards, rule checks, bench. -->
+        <!-- One composition as the side panel shows it: party cards, rule checks, bench, all full width. -->
         <DataTemplate DataType="vm:PartyResultViewModel">
-            <StackPanel Spacing="14">
+            <StackPanel Spacing="12">
                 <ItemsControl ItemsSource="{Binding Parties}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel />
+                            <StackPanel Spacing="12" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:PartyCardViewModel">
-                            <Border Classes="card" Width="340" Margin="0,0,14,14">
+                            <Border Classes="card">
                                 <StackPanel Spacing="10">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="{Binding Title}" Classes="cardTitle" />
                                         <TextBlock Grid.Column="1" Text="{Binding Summary}" Classes="meta" VerticalAlignment="Center" />
                                     </Grid>
-                                    <Border Classes="rule" />
+                                    <!-- Status bar: how many of each role. -->
+                                    <Border Background="{StaticResource NavBrush}" CornerRadius="3" Padding="10,5">
+                                        <ItemsControl ItemsSource="{Binding RoleCounts}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="16" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:RoleCountViewModel">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Ellipse Width="7" Height="7" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Text}" FontSize="12" Foreground="{StaticResource TextLightBrush}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
                                     <ItemsControl ItemsSource="{Binding Members}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -115,7 +137,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Border Classes="foldBox" MaxWidth="694" HorizontalAlignment="Left">
+                <Border Classes="foldBox">
                     <StackPanel>
                         <Border Classes="foldHeader">
                             <TextBlock Text="규칙 확인" />
@@ -124,15 +146,15 @@
                             <ItemsControl ItemsSource="{Binding Checks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="x:String">
-                                        <TextBlock Text="{Binding}" Margin="0,3" FontSize="13" TextWrapping="Wrap"
-                                                   Foreground="{StaticResource TextLightBrush}" />
+                                        <TextBlock Text="{Binding}" Margin="0,3" FontSize="13" TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding}" Foreground="{StaticResource TextLightBrush}" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </Border>
                     </StackPanel>
                 </Border>
-                <Border Classes="foldBox" MaxWidth="694" HorizontalAlignment="Left" IsVisible="{Binding HasBench}">
+                <Border Classes="foldBox" IsVisible="{Binding HasBench}">
                     <StackPanel>
                         <Border Classes="foldHeader">
                             <TextBlock Text="대기 · 제외" />

@@ -293,13 +293,13 @@ public static class PartyService
         int buffedDealers = 0;
         bool hasSupport = false;
         List<string> misplaced = new List<string>();
+        List<string> missingRoles = new List<string>();
 
         foreach (PartyModel party in parties)
         {
             int tanks = 0;
             int healers = 0;
             int supports = 0;
-            int dealers = 0;
             int partyBuffDealers = 0;
             foreach (CharacterData member in party.Members)
             {
@@ -316,7 +316,6 @@ public static class PartyService
                         supports++;
                         break;
                     case RoleKind.Dealer:
-                        dealers++;
                         if (record.BuffPriority > 0)
                         {
                             partyBuffDealers++;
@@ -349,20 +348,28 @@ public static class PartyService
                 buffedDealers += partyBuffDealers;
             }
 
-            string makeUp = $"{party.Number}파티: 탱 {tanks} · 힐 {healers} · 서폿 {supports} · 딜 {dealers}";
-            List<string> missing = new List<string>();
             if (tanks == 0)
             {
-                missing.Add("탱커 없음");
+                missingRoles.Add($"⚠ {party.Number}파티 탱커 없음");
             }
 
             if (healers == 0)
             {
-                missing.Add("힐러 없음");
+                missingRoles.Add($"⚠ {party.Number}파티 힐러 없음");
             }
-
-            checks.Add(missing.Count == 0 ? "✅ " + makeUp : $"⚠ {makeUp} ({string.Join(", ", missing)})");
         }
+
+        if (missingRoles.Count > 0)
+        {
+            checks.AddRange(missingRoles);
+        }
+        else
+        {
+            checks.Add("✅ 탱커 · 힐러 모두 있음");
+        }
+
+        List<string> twice = players.Where(pair => pair.Value > 1).Select(pair => $"{pair.Key}번").ToList();
+        checks.Add(twice.Count > 0 ? "⚠ 같은 번호 중복: " + string.Join(", ", twice) : "✅ 같은 번호 중복 없음");
 
         if (hasSupport)
         {
@@ -382,12 +389,6 @@ public static class PartyService
         foreach (string line in misplaced)
         {
             checks.Add("⚠ " + line);
-        }
-
-        List<string> twice = players.Where(pair => pair.Value > 1).Select(pair => $"{pair.Key}번").ToList();
-        if (twice.Count > 0)
-        {
-            checks.Add("⚠ 같은 번호 중복: " + string.Join(", ", twice));
         }
 
         if (parties.Count > 1 && parties.All(party => party.Members.Count > 0))

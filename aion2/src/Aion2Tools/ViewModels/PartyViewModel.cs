@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,12 @@ public partial class PartyViewModel : ViewModelBase
 
     private GameDataTable _data;
 
+    /// <summary>The mains of the last rotation in turn order, for the copied text.</summary>
+    private IReadOnlyList<IReadOnlyList<MainTurnModel>> _mainTurns = new List<IReadOnlyList<MainTurnModel>>();
+
+    /// <summary>Whether the last rotation let each character in once (성역); its text then lists each run.</summary>
+    private bool _isOncePerCharacter;
+
     public PresetPickerViewModel Preset { get; } = new PresetPickerViewModel();
 
     [ObservableProperty]
@@ -36,13 +43,17 @@ public partial class PartyViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsRotation))]
+    [NotifyPropertyChangedFor(nameof(IsMainRunCountShown))]
     public partial decimal? RunCount { get; set; } = 1;
 
     public bool IsRotation => GetRunCount() > 1;
 
-    /// <summary>How many runs each main plays in a rotation; their alts fill the rest.</summary>
+    /// <summary>How many runs each main plays in a rotation; their alts fill the rest. Not asked when each
+    /// character enters once (성역), where every main plays one run.</summary>
     [ObservableProperty]
     public partial decimal? MainRunCount { get; set; } = 2;
+
+    public bool IsMainRunCountShown => IsRotation && Preset.EntryLimit != 1;
 
     /// <summary>The alternatives of one run, or the runs of a rotation, one row each.</summary>
     public ObservableCollection<ResultRowViewModel> ResultRows { get; } = new ObservableCollection<ResultRowViewModel>();
@@ -66,6 +77,7 @@ public partial class PartyViewModel : ViewModelBase
     {
         _data = data;
         Preset.SetPresets(data.Presets);
+        Preset.PropertyChanged += OnPresetChanged;
         Refresh();
     }
 
@@ -107,7 +119,9 @@ public partial class PartyViewModel : ViewModelBase
         SelectedRowOrNull = row == SelectedRowOrNull ? null : row;
     }
 
-    /// <summary>The result as plain text, for pasting into a chat: every run of a rotation, or the alternative in view.</summary>
+    /// <summary>The result as plain text, for pasting into a chat: the names of the alternative in view; for a
+    /// rotation just the order the mains take their turns in, a main whose runs are not the planned back-to-back
+    /// block getting its run numbers; and when each character enters once (성역), the names of every run.</summary>
     public string ToText()
     {
         if (!IsRotationResult)
@@ -117,13 +131,29 @@ public partial class PartyViewModel : ViewModelBase
         }
 
         StringBuilder text = new StringBuilder();
-        foreach (ResultRowViewModel row in ResultRows)
+        if (_isOncePerCharacter)
         {
-            text.AppendLine($"== {row.Title} ==");
-            text.Append(row.Result.ToText());
+            foreach (ResultRowViewModel row in ResultRows)
+            {
+                text.AppendLine($"[{row.Title}]");
+                text.Append(row.Result.ToText());
+            }
+
+            return text.ToString();
+        }
+
+        text.AppendLine("본캐 순서");
+        for (int turn = 0; turn < _mainTurns.Count; turn++)
+        {
+            text.AppendLine($"{turn + 1}. {string.Join(" · ", _mainTurns[turn].Select(FormatTurn))}");
         }
 
         return text.ToString();
+    }
+
+    private static string FormatTurn(MainTurnModel turn)
+    {
+        return turn.IsBlock ? turn.Main.Name : $"{turn.Main.Name} ({string.Join("·", turn.Runs)}회차)";
     }
 
     [RelayCommand]
@@ -188,7 +218,7 @@ public partial class PartyViewModel : ViewModelBase
 
         for (int index = 0; index < results.Count; index++)
         {
-            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"조합 {index + 1}", results[index], _data)));
+            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"조합 {index + 1}", results[index], _data), preset.PartyCount * preset.PartySize));
         }
 
         ShowResult(false);
@@ -208,7 +238,10 @@ public partial class PartyViewModel : ViewModelBase
         int mainRunCount = MainRunCount.HasValue ? (int)MainRunCount.Value : 0;
         GameDataTable data = _data;
         StatusText = "로테이션 계산 중…";
-        IReadOnlyList<PartyResultModel> runs = await Task.Run(() => RotationService.Compose(characters, preset, data, runCount, mainRunCount, SEED));
+        RotationResult rotation = await Task.Run(() => RotationService.Compose(characters, preset, data, runCount, mainRunCount, SEED));
+        IReadOnlyList<PartyResultModel> runs = rotation.Runs;
+        _mainTurns = rotation.MainTurns;
+        _isOncePerCharacter = preset.EntryLimit == 1;
         if (runs.Count == 0)
         {
             StatusText = "편성할 수 있는 캐릭터가 없습니다.";
@@ -217,13 +250,13 @@ public partial class PartyViewModel : ViewModelBase
 
         for (int index = 0; index < runs.Count; index++)
         {
-            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"{index + 1}회차", runs[index], _data)));
+            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"{index + 1}회차", runs[index], _data), preset.PartyCount * preset.PartySize));
         }
 
         ShowResult(true);
         int seated = runs.Sum(run => run.Parties.Sum(party => party.Members.Count));
-        int mainSeats = runs.Sum(run => run.Parties.Sum(party => party.Members.Count(member => member.IsMain)));
-        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 (본캐 {mainSeats} · 부캐 {seated - mainSeats})";
+        int mainsSeated = runs.Sum(run => run.Parties.Sum(party => party.Members.Count(member => member.IsMain)));
+        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 (본캐 {mainsSeated} · 부캐 {seated - mainsSeated})";
     }
 
     private void ShowResult(bool isRotation)
@@ -239,6 +272,14 @@ public partial class PartyViewModel : ViewModelBase
         ResultRows.Clear();
         IsRotationResult = false;
         OnPropertyChanged(nameof(HasResult));
+    }
+
+    private void OnPresetChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PresetPickerViewModel.EntryLimit))
+        {
+            OnPropertyChanged(nameof(IsMainRunCountShown));
+        }
     }
 
     partial void OnSelectedRowOrNullChanged(ResultRowViewModel? oldValue, ResultRowViewModel? newValue)

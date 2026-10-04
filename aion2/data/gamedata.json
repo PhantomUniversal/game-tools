@@ -1,5 +1,5 @@
 {
-  "Version": 1,
+  "Version": 2,
   "Classes": [
     { "Id": "guardian", "Name": "수호성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 1 },
     { "Id": "gladiator", "Name": "검성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 0 },
@@ -12,11 +12,11 @@
     { "Id": "fighter", "Name": "권성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 2, "PreferredParty": 0 }
   ],
   "Presets": [
-    { "Id": "sanctuary-rudra", "Name": "성역 · 루드라 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 2700, "MinCombatPower": 0 },
-    { "Id": "sanctuary-erosion", "Name": "성역 · 침식의 정화소 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 3700, "MinCombatPower": 0 },
-    { "Id": "sanctuary-muspel", "Name": "성역 · 무스펠 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 4500, "MinCombatPower": 0 },
-    { "Id": "expedition", "Name": "원정 (5인)", "PartyCount": 1, "PartySize": 5, "MinItemLevel": 0, "MinCombatPower": 0 },
-    { "Id": "transcendence", "Name": "초월 (5인)", "PartyCount": 1, "PartySize": 5, "MinItemLevel": 0, "MinCombatPower": 0 }
+    { "Id": "sanctuary-rudra", "Name": "성역 · 루드라 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 2700, "MinCombatPower": 0, "EntryLimit": 1 },
+    { "Id": "sanctuary-erosion", "Name": "성역 · 침식의 정화소 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 3700, "MinCombatPower": 0, "EntryLimit": 1 },
+    { "Id": "sanctuary-muspel", "Name": "성역 · 무스펠 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 4500, "MinCombatPower": 0, "EntryLimit": 1 },
+    { "Id": "expedition", "Name": "원정 (5인)", "PartyCount": 1, "PartySize": 5, "MinItemLevel": 0, "MinCombatPower": 0, "EntryLimit": 0 },
+    { "Id": "transcendence", "Name": "초월 (5인)", "PartyCount": 1, "PartySize": 5, "MinItemLevel": 0, "MinCombatPower": 0, "EntryLimit": 0 }
   ],
   "Weights": {
     "MissingTank": 1000,

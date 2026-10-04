@@ -15,6 +15,9 @@ public class PresetRecord
 
     public int MinCombatPower { get; set; }
 
+    /// <summary>How many runs one character may enter, such as a weekly lockout; 0 is no limit.</summary>
+    public int EntryLimit { get; set; }
+
     public PresetRecord()
     {
     }
