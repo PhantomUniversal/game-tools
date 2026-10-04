@@ -76,6 +76,24 @@ public class PartyServiceTests
     }
 
     [Fact]
+    public void Compose_FewerThanTheSeats_SeatsEveryone()
+    {
+        List<CharacterData> roster = new List<CharacterData>
+        {
+            Create(1, "철벽", "guardian", 30000),
+            Create(2, "불꽃", "sorcerer", 30000),
+            Create(3, "칼바람", "gladiator", 30000),
+            Create(4, "바람결", "spiritmaster", 30000),
+            Create(5, "새벽", "cleric", 30000),
+        };
+
+        PartyResultModel result = ComposeBest(roster, GetPreset("sanctuary-rudra"));
+
+        Assert.Empty(result.Bench);
+        Assert.Equal(5, result.Parties.Sum(party => party.Members.Count));
+    }
+
+    [Fact]
     public void Compose_BelowItemLevel_IsBenchedWithReason()
     {
         List<CharacterData> roster = CreateRaidRoster();

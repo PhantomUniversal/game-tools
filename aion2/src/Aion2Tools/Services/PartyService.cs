@@ -14,6 +14,9 @@ public static class PartyService
     private const int RESTART_COUNT = 40;
     private const double EPSILON = 1e-9;
 
+    /// <summary>A character on the bench while a seat is free; below a duplicate player, so the same number still sits out.</summary>
+    private const double BENCH_WITH_FREE_SEAT_PENALTY = 3000;
+
 
     // ─────────────────────────────────────────────────────────────────────────
     // << COMPOSE >>
@@ -508,6 +511,10 @@ public static class PartyService
             {
                 score -= (count - 1) * _weights.RaidDebuffDuplicate;
             }
+
+            int benched = groups.Count(group => group == BENCH);
+            int freeSeats = _preset.PartyCount * _preset.PartySize - (groups.Length - benched);
+            score -= Math.Min(benched, freeSeats) * BENCH_WITH_FREE_SEAT_PENALTY;
 
             score += totals.Sum() / 1000 * _weights.CombatPowerPer1000;
             if (_preset.PartyCount > 1)
