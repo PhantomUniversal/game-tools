@@ -20,9 +20,6 @@ public partial class PresetPickerViewModel : ViewModelBase
     [ObservableProperty]
     public partial decimal? MinCombatPower { get; set; }
 
-    [ObservableProperty]
-    public partial decimal? EntryLimit { get; set; }
-
     /// <summary>Keeps the chosen preset by id across a game data update.</summary>
     public void SetPresets(IReadOnlyList<PresetRecord> presets)
     {
@@ -51,7 +48,7 @@ public partial class PresetPickerViewModel : ViewModelBase
         effective.PartySize = source.PartySize;
         effective.MinItemLevel = MinItemLevel.HasValue ? (int)MinItemLevel.Value : 0;
         effective.MinCombatPower = MinCombatPower.HasValue ? (int)MinCombatPower.Value : 0;
-        effective.EntryLimit = EntryLimit.HasValue ? (int)EntryLimit.Value : 0;
+        effective.EntryLimit = source.EntryLimit;
         return effective;
     }
 
@@ -64,7 +61,6 @@ public partial class PresetPickerViewModel : ViewModelBase
 
         MinItemLevel = value.MinItemLevel;
         MinCombatPower = value.MinCombatPower;
-        EntryLimit = value.EntryLimit;
         SettingsService.Settings.PresetId = value.Id;
         SettingsService.ScheduleSave();
     }

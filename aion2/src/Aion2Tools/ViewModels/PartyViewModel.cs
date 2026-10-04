@@ -53,7 +53,7 @@ public partial class PartyViewModel : ViewModelBase
     [ObservableProperty]
     public partial decimal? MainRunCount { get; set; } = 2;
 
-    public bool IsMainRunCountShown => IsRotation && Preset.EntryLimit != 1;
+    public bool IsMainRunCountShown => IsRotation && (Preset.SelectedPresetOrNull is null || Preset.SelectedPresetOrNull.EntryLimit != 1);
 
     /// <summary>The alternatives of one run, or the runs of a rotation, one row each.</summary>
     public ObservableCollection<ResultRowViewModel> ResultRows { get; } = new ObservableCollection<ResultRowViewModel>();
@@ -276,7 +276,7 @@ public partial class PartyViewModel : ViewModelBase
 
     private void OnPresetChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PresetPickerViewModel.EntryLimit))
+        if (e.PropertyName == nameof(PresetPickerViewModel.SelectedPresetOrNull))
         {
             OnPropertyChanged(nameof(IsMainRunCountShown));
         }

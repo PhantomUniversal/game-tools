@@ -63,11 +63,6 @@
                     <NumericUpDown Value="{Binding MinCombatPower, Converter={x:Static views:IgnoreNullConverter.Instance}}"
                                    Minimum="0" Increment="1000" FormatString="0" Width="150" />
                 </StackPanel>
-                <StackPanel>
-                    <TextBlock Text="캐릭터당 입장 (0=제한 없음)" Classes="fieldLabel" />
-                    <NumericUpDown Value="{Binding EntryLimit, Converter={x:Static views:IgnoreNullConverter.Instance}}"
-                                   Minimum="0" Maximum="20" FormatString="0" Width="150" />
-                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
