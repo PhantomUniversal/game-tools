@@ -28,6 +28,11 @@
   </Target>
 
   <ItemGroup>
+    <!-- Official class icons from NCSoft's AION2 site (assets.playnccdn.com), named by class id. -->
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The game data the app falls back to when nothing newer has been downloaded. -->
     <EmbeddedResource Include="..\..\data\gamedata.json" LogicalName="gamedata.json" />
   </ItemGroup>

@@ -8,52 +8,22 @@
              RequestedThemeVariant="Dark">
 
     <Application.Resources>
-        <SolidColorBrush x:Key="WindowBrush" Color="#0F1117" />
-        <SolidColorBrush x:Key="NavBrush" Color="#12151D" />
-        <SolidColorBrush x:Key="PanelBrush" Color="#171A23" />
-        <SolidColorBrush x:Key="Panel2Brush" Color="#1E2230" />
-        <SolidColorBrush x:Key="LineBrush" Color="#2A2F40" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#9AA1B5" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#7C9CFF" />
-        <SolidColorBrush x:Key="WarnBrush" Color="#F6AD55" />
-        <SolidColorBrush x:Key="MainRowBrush" Color="#1C2540" />
-        <SolidColorBrush x:Key="SunkenBrush" Color="#12141B" />
-        <SolidColorBrush x:Key="ChipBrush" Color="#343A4E" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Aion2Tools/Styles/Theme.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
-        <FluentTheme />
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="14" />
-        </Style>
-        <Style Selector="TextBlock.muted">
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
-        </Style>
-        <Style Selector="TextBlock.h1">
-            <Setter Property="FontSize" Value="22" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="TextBlock.h2">
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="Button.accent">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="#0B0D14" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="#0B0D14" />
-        </Style>
-        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#9AB3FF" />
-            <Setter Property="Foreground" Value="#0B0D14" />
-        </Style>
+        <!-- Fluent's own accent (progress bars, list and combo highlights) in the same gold. -->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#C9A45C" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <!-- After the theme: most of these rules undo a Fluent default. -->
+        <StyleInclude Source="avares://Aion2Tools/Styles/AppStyles.axaml" />
     </Application.Styles>
 
     <Application.DataTemplates>
@@ -72,27 +42,33 @@
 
         <!-- The preset box and its cuts, shared by both composition pages. -->
         <DataTemplate DataType="vm:PresetPickerViewModel">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <ComboBox ItemsSource="{Binding Presets}"
-                          SelectedItem="{Binding SelectedPresetOrNull}"
-                          MinWidth="220" VerticalAlignment="Center">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="models:PresetRecord">
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <TextBlock Text="아이템 레벨 ≥" VerticalAlignment="Center" Classes="muted" />
-                <NumericUpDown Value="{Binding MinItemLevel, Converter={x:Static views:IgnoreNullConverter.Instance}}" Minimum="0" Increment="100" FormatString="0" Width="130" />
-                <TextBlock Text="전투력 ≥" VerticalAlignment="Center" Classes="muted" />
-                <NumericUpDown Value="{Binding MinCombatPower, Converter={x:Static views:IgnoreNullConverter.Instance}}" Minimum="0" Increment="1000" FormatString="0" Width="140" />
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <StackPanel>
+                    <TextBlock Text="콘텐츠" Classes="fieldLabel" />
+                    <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPresetOrNull}" MinWidth="230">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="models:PresetRecord">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="아이템 레벨 이상" Classes="fieldLabel" />
+                    <NumericUpDown Value="{Binding MinItemLevel, Converter={x:Static views:IgnoreNullConverter.Instance}}"
+                                   Minimum="0" Increment="100" FormatString="0" Width="140" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="전투력 이상" Classes="fieldLabel" />
+                    <NumericUpDown Value="{Binding MinCombatPower, Converter={x:Static views:IgnoreNullConverter.Instance}}"
+                                   Minimum="0" Increment="1000" FormatString="0" Width="150" />
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
         <!-- One composition: party cards, rule checks, bench. -->
         <DataTemplate DataType="vm:PartyResultViewModel">
-            <StackPanel Spacing="10">
-                <TextBlock Text="{Binding Title}" Classes="h2" />
+            <StackPanel Spacing="14">
                 <ItemsControl ItemsSource="{Binding Parties}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -101,53 +77,75 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:PartyCardViewModel">
-                            <Border Classes="card" Width="360" Margin="0,0,12,12">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Title}" Classes="h2" />
+                            <Border Classes="card" Width="340" Margin="0,0,14,14">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Title}" Classes="cardTitle" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Summary}" Classes="meta" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Border Classes="rule" />
                                     <ItemsControl ItemsSource="{Binding Members}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Spacing="8" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="vm:MemberRowViewModel">
-                                                <Grid ColumnDefinitions="52,*,Auto" Margin="0,3">
-                                                    <Border Background="{Binding RoleBrush}" CornerRadius="9" Padding="7,1"
-                                                            HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding RoleText}" Foreground="#0B0D14" FontSize="11" FontWeight="Bold" />
-                                                    </Border>
-                                                    <StackPanel Grid.Column="1">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                        <TextBlock Text="{Binding Detail}" FontSize="11" Classes="muted" />
+                                                <Grid ColumnDefinitions="40,*,Auto,Auto">
+                                                    <Image Width="34" Height="34" HorizontalAlignment="Left"
+                                                           Source="{Binding ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                                        <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{StaticResource TextBrightBrush}" />
+                                                        <TextBlock Text="{Binding Detail}" Classes="meta" />
                                                     </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="{Binding CombatPowerText}" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding CombatPowerText}" FontSize="13"
+                                                               Foreground="{StaticResource TextLightBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                    <Border Grid.Column="3" Background="{Binding RoleBrush}" CornerRadius="3" Padding="6,1"
+                                                            VerticalAlignment="Center" MinWidth="34">
+                                                        <TextBlock Text="{Binding RoleText}" Foreground="#10141D" FontSize="11"
+                                                                   FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                                    </Border>
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,6,0,0" Margin="0,4,0,0">
-                                        <TextBlock Text="{Binding Summary}" Classes="muted" />
-                                    </Border>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Border Classes="card">
-                    <ItemsControl ItemsSource="{Binding Checks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <TextBlock Text="{Binding}" Margin="0,2" TextWrapping="Wrap" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                <Border Classes="foldBox" MaxWidth="694" HorizontalAlignment="Left">
+                    <StackPanel>
+                        <Border Classes="foldHeader">
+                            <TextBlock Text="규칙 확인" />
+                        </Border>
+                        <Border Classes="foldBody">
+                            <ItemsControl ItemsSource="{Binding Checks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding}" Margin="0,3" FontSize="13" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextLightBrush}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
                 </Border>
-                <Border Classes="card" IsVisible="{Binding HasBench}">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="대기 / 제외" Classes="h2" />
-                        <ItemsControl ItemsSource="{Binding Bench}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <TextBlock Text="{Binding}" Classes="muted" Margin="0,1" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                <Border Classes="foldBox" MaxWidth="694" HorizontalAlignment="Left" IsVisible="{Binding HasBench}">
+                    <StackPanel>
+                        <Border Classes="foldHeader">
+                            <TextBlock Text="대기 · 제외" />
+                        </Border>
+                        <Border Classes="foldBody">
+                            <ItemsControl ItemsSource="{Binding Bench}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding}" Classes="meta" Margin="0,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
                     </StackPanel>
                 </Border>
             </StackPanel>

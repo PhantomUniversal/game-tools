@@ -12,6 +12,8 @@ public class MemberRowViewModel : ViewModelBase
     private static readonly IBrush SUPPORT_BRUSH = Brush.Parse("#F6E05E");
     private static readonly IBrush DEALER_BRUSH = Brush.Parse("#FC8181");
 
+    public string ClassId { get; }
+
     public string RoleText { get; }
 
     public IBrush RoleBrush { get; }
@@ -24,6 +26,7 @@ public class MemberRowViewModel : ViewModelBase
 
     public MemberRowViewModel(CharacterData character, ClassRecord record, bool isBuffed)
     {
+        ClassId = record.Id;
         RoleText = GetRoleText(record.Role);
         RoleBrush = GetRoleBrush(record.Role);
         Name = (character.IsMain ? "★ " : string.Empty) + character.Name + (isBuffed ? " ⚡" : string.Empty);

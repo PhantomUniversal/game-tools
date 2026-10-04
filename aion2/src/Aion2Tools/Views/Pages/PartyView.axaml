@@ -3,33 +3,38 @@
              xmlns:vm="using:Aion2Tools.ViewModels"
              x:Class="Aion2Tools.Views.Pages.PartyView"
              x:DataType="vm:PartyViewModel">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
-        <TextBlock Grid.Row="0" Text="파티 조합" Classes="h1" Margin="0,0,0,12" />
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24,20,24,0">
+        <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,16">
+            <TextBlock Text="파티 조합" Classes="pageTitle" />
+            <TextBlock Text="{Binding StatusText}" Classes="meta" />
+        </StackPanel>
 
-        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
-            <ContentControl Content="{Binding Preset}" Margin="0,0,12,6" />
-            <Button Content="▶ 자동 조합" Classes="accent" Command="{Binding ComposeCommand}" Margin="0,0,8,6" />
-            <Button Content="📋 텍스트 복사" Click="OnCopyClick" IsEnabled="{Binding HasResult}" Margin="0,0,0,6" />
-        </WrapPanel>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,18">
+            <ContentControl Content="{Binding Preset}" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom">
+                <Button Content="텍스트 복사" Click="OnCopyClick" IsEnabled="{Binding HasResult}" />
+                <Button Content="▶  자동 조합" Classes="accent" Command="{Binding ComposeCommand}" />
+            </StackPanel>
+        </Grid>
 
-        <TextBlock Grid.Row="2" Text="{Binding StatusText}" Classes="muted" Margin="0,0,0,10" />
+        <StackPanel Grid.Row="2" IsVisible="{Binding HasResult}" Margin="0,0,0,16">
+            <ListBox Classes="tabs" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResultOrNull}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="vm:PartyResultViewModel">
+                        <TextBlock Text="{Binding Title}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Border Classes="rule" />
+        </StackPanel>
 
-        <ListBox Grid.Row="3" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResultOrNull}"
-                 Background="Transparent" Margin="0,0,0,10" IsVisible="{Binding HasResult}">
-            <ListBox.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="6" />
-                </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="vm:PartyResultViewModel">
-                    <TextBlock Text="{Binding Title}" Margin="6,2" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-
-        <ScrollViewer Grid.Row="4">
-            <ContentControl Content="{Binding SelectedResultOrNull}" />
+        <ScrollViewer Grid.Row="3">
+            <ContentControl Content="{Binding SelectedResultOrNull}" Margin="0,0,0,24" />
         </ScrollViewer>
     </Grid>
 </UserControl>

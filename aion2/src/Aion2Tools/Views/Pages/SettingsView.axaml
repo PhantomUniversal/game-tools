@@ -4,46 +4,67 @@
              x:Class="Aion2Tools.Views.Pages.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <ScrollViewer>
-        <StackPanel Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
-            <TextBlock Text="설정" Classes="h1" />
+        <StackPanel Spacing="14" MaxWidth="760" HorizontalAlignment="Left" Margin="24,20,24,24">
+            <TextBlock Text="설정" Classes="pageTitle" Margin="0,0,0,4" />
 
-            <Border Classes="card">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="앱 업데이트" Classes="h2" />
-                    <TextBlock Text="{Binding Update.VersionText, StringFormat='버전: {0}'}" />
-                    <TextBlock Classes="muted" TextWrapping="Wrap"
-                               Text="setup\windows\install.bat 으로 설치한 복사본은 시작할 때 저장소에 새 커밋이 있는지 확인하고, 여기서 pull · 빌드 · 교체 후 재시작합니다." />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="지금 업데이트" Classes="accent" Command="{Binding Update.StartCommand}"
-                                IsVisible="{Binding Update.CanStart}" />
-                        <Button Content="재시작" Command="{Binding Update.RestartCommand}" IsVisible="{Binding Update.IsReady}" />
-                    </StackPanel>
-                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding Update.IsBuilding}" />
-                    <TextBlock Text="{Binding Update.StatusText}" />
-                    <TextBlock Text="{Binding Update.LastLine}" Classes="muted" FontSize="11" TextWrapping="Wrap" />
+            <Border Classes="foldBox">
+                <StackPanel>
+                    <Border Classes="foldHeader">
+                        <TextBlock Text="앱 업데이트" />
+                    </Border>
+                    <Border Classes="foldBody">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{Binding Update.VersionText, StringFormat='버전  {0}'}" FontSize="13"
+                                       Foreground="{StaticResource TextBrightBrush}" />
+                            <TextBlock Classes="hint"
+                                       Text="setup\windows\install.bat 으로 설치한 복사본은 시작할 때 저장소에 새 커밋이 있는지 확인하고, 여기서 pull · 빌드 · 교체 후 재시작합니다." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="지금 업데이트" Classes="accent" Command="{Binding Update.StartCommand}"
+                                        IsVisible="{Binding Update.CanStart}" />
+                                <Button Content="재시작" Command="{Binding Update.RestartCommand}" IsVisible="{Binding Update.IsReady}" />
+                            </StackPanel>
+                            <ProgressBar IsIndeterminate="True" IsVisible="{Binding Update.IsBuilding}" />
+                            <TextBlock Text="{Binding Update.StatusText}" FontSize="13" />
+                            <TextBlock Text="{Binding Update.LastLine}" Classes="hint" FontSize="11" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 
-            <Border Classes="card">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="게임 데이터 (클래스 · 프리셋 · 조합 가중치)" Classes="h2" />
-                    <TextBlock Text="{Binding DataVersionText, StringFormat='사용 중: {0}'}" />
-                    <TextBlock Classes="muted" TextWrapping="Wrap"
-                               Text="저장소의 aion2/data/gamedata.json 버전을 올려 push하면, 앱을 다시 빌드하지 않아도 여기서 받아 적용합니다." />
-                    <TextBlock Text="데이터 주소" Classes="muted" />
-                    <TextBox Text="{Binding GameDataUrl}" />
-                    <CheckBox Content="시작할 때 자동 확인" IsChecked="{Binding IsAutoCheckOn}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="지금 확인" Classes="accent" Command="{Binding CheckDataCommand}" />
-                        <TextBlock Text="{Binding DataStatusText}" VerticalAlignment="Center" />
-                    </StackPanel>
+            <Border Classes="foldBox">
+                <StackPanel>
+                    <Border Classes="foldHeader">
+                        <TextBlock Text="게임 데이터 · 클래스 / 프리셋 / 조합 가중치" />
+                    </Border>
+                    <Border Classes="foldBody">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{Binding DataVersionText, StringFormat='사용 중  {0}'}" FontSize="13"
+                                       Foreground="{StaticResource TextBrightBrush}" />
+                            <TextBlock Classes="hint"
+                                       Text="저장소의 aion2/data/gamedata.json 버전을 올려 push하면, 앱을 다시 빌드하지 않아도 여기서 받아 적용합니다." />
+                            <StackPanel>
+                                <TextBlock Text="데이터 주소" Classes="fieldLabel" />
+                                <TextBox Text="{Binding GameDataUrl}" />
+                            </StackPanel>
+                            <CheckBox Content="시작할 때 자동 확인" IsChecked="{Binding IsAutoCheckOn}" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="지금 확인" Classes="accent" Command="{Binding CheckDataCommand}" />
+                                <TextBlock Text="{Binding DataStatusText}" FontSize="12" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextLightBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 
-            <Border Classes="card">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="저장 위치" Classes="h2" />
-                    <TextBlock Text="{Binding SettingsFolder}" Classes="muted" TextWrapping="Wrap" />
+            <Border Classes="foldBox">
+                <StackPanel>
+                    <Border Classes="foldHeader">
+                        <TextBlock Text="저장 위치" />
+                    </Border>
+                    <Border Classes="foldBody">
+                        <TextBlock Text="{Binding SettingsFolder}" Classes="hint" />
+                    </Border>
                 </StackPanel>
             </Border>
         </StackPanel>

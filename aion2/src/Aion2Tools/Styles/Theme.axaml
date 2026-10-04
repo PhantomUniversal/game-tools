@@ -1,0 +1,53 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- The whole palette, laid out like pipeline-hub's Kiln but in AION2's colours: a night-sky navy
+         for surfaces, the gold of the official class emblems as the one accent, and the bronze
+         (#6B5036) the official site draws its frames with. Every colour the app uses is named here. -->
+
+    <!-- Surfaces, darkest to lightest. An input sits darker than what holds it. -->
+    <SolidColorBrush x:Key="NavBrush" Color="#0B0E15" />  <!-- the sidebar and side panels -->
+    <SolidColorBrush x:Key="InputBrush" Color="#0A0D13" />
+    <SolidColorBrush x:Key="WindowBrush" Color="#10141D" />
+    <SolidColorBrush x:Key="InputFocusBrush" Color="#0F131C" />
+    <SolidColorBrush x:Key="SunkenBrush" Color="#121722" />  <!-- a box set into a panel -->
+    <SolidColorBrush x:Key="PanelBrush" Color="#161C28" />  <!-- a card -->
+    <SolidColorBrush x:Key="ControlBrush" Color="#1B2230" />  <!-- a fold header -->
+    <SolidColorBrush x:Key="PanelRaisedBrush" Color="#1E2534" />  <!-- a card under the pointer, a button at rest -->
+    <SolidColorBrush x:Key="ControlHoverBrush" Color="#27303F" />
+    <SolidColorBrush x:Key="NavHoverBrush" Color="#151B27" />
+    <SolidColorBrush x:Key="NavActiveBrush" Color="#1A2130" />
+    <SolidColorBrush x:Key="BorderBrushSoft" Color="#252D3C" />
+    <SolidColorBrush x:Key="BorderBrushStrong" Color="#3A4458" />
+
+    <!-- Gold: the one colour that means "this one" or "do this". -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#C9A45C" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#DDB96E" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#17120A" />  <!-- text on a gold fill -->
+    <SolidColorBrush x:Key="AccentFillBrush" Color="#2A2416" />  <!-- a gold-tinted fill: a badge, a selection -->
+    <SolidColorBrush x:Key="BronzeBrush" Color="#6B5036" />  <!-- the frame around a gold-tinted fill -->
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#E8CE92" />  <!-- gold text on a dark fill -->
+    <!-- Aether blue, from the official site's glow; only for the faint wash behind a selected card. -->
+    <SolidColorBrush x:Key="AetherFillBrush" Color="#141E2E" />
+
+    <!-- Text, brightest to faintest; slightly warm, like parchment under the gold. -->
+    <SolidColorBrush x:Key="TextBrightBrush" Color="#ECE7DC" />
+    <SolidColorBrush x:Key="TextStrongBrush" Color="#E4DFD3" />
+    <SolidColorBrush x:Key="TextLightBrush" Color="#D6D2C8" />
+    <SolidColorBrush x:Key="TextBrush" Color="#C8C4BA" />  <!-- a field label -->
+    <SolidColorBrush x:Key="TextChipBrush" Color="#BDB9AF" />
+    <SolidColorBrush x:Key="TextQuietBrush" Color="#A9A69E" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#8E949F" />
+    <SolidColorBrush x:Key="TextMetaBrush" Color="#7F8693" />  <!-- a breadcrumb, a card's second line -->
+    <SolidColorBrush x:Key="TextFaintBrush" Color="#6C7380" />  <!-- a hint -->
+    <SolidColorBrush x:Key="CrumbSepBrush" Color="#4A5262" />
+
+    <!-- State. -->
+    <SolidColorBrush x:Key="DangerFillBrush" Color="#2A1719" />
+    <SolidColorBrush x:Key="DangerHoverBrush" Color="#3A1F22" />
+    <SolidColorBrush x:Key="DangerBorderBrush" Color="#5A2C30" />
+    <SolidColorBrush x:Key="StopBrush" Color="#B4484E" />
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#F2B8B8" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#2E3646" />
+
+</ResourceDictionary>
