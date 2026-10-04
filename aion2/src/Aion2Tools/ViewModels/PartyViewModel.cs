@@ -27,7 +27,7 @@ public partial class PartyViewModel : ViewModelBase
     public bool HasResult => SelectedResultOrNull is not null;
 
     [ObservableProperty]
-    public partial string StatusText { get; set; } = "명단 탭에서 참가할 캐릭터를 체크한 뒤 [자동 조합]을 누르세요.";
+    public partial string StatusText { get; set; } = "명단의 캐릭터로 파티를 짭니다.";
 
     public PartyViewModel(GameDataTable data)
     {
@@ -44,20 +44,20 @@ public partial class PartyViewModel : ViewModelBase
     [RelayCommand]
     private void Compose()
     {
-        List<CharacterData> selected = SettingsService.Settings.Characters.Where(character => character.IsSelected).ToList();
+        List<CharacterData> characters = SettingsService.Settings.Characters.ToList();
         Results.Clear();
         SelectedResultOrNull = null;
-        if (selected.Count == 0)
+        if (characters.Count == 0)
         {
-            StatusText = "참가 체크된 캐릭터가 없습니다.";
+            StatusText = "명단에 캐릭터가 없습니다.";
             return;
         }
 
         PresetRecord preset = Preset.CreateEffective();
-        IReadOnlyList<PartyResultModel> results = PartyService.Compose(selected, preset, _data, ALTERNATIVE_COUNT, SEED);
+        IReadOnlyList<PartyResultModel> results = PartyService.Compose(characters, preset, _data, ALTERNATIVE_COUNT, SEED);
         if (results.Count == 0)
         {
-            StatusText = $"참가 {selected.Count}명 모두 컷 미달이거나 클래스가 없습니다.";
+            StatusText = $"{characters.Count}명 모두 컷 미달이거나 클래스가 없습니다.";
             return;
         }
 
@@ -67,6 +67,6 @@ public partial class PartyViewModel : ViewModelBase
         }
 
         SelectedResultOrNull = Results[0];
-        StatusText = $"참가 {selected.Count}명 · {preset.Name} · 대안 {results.Count}개";
+        StatusText = $"{characters.Count}명 · {preset.Name} · 대안 {results.Count}개";
     }
 }

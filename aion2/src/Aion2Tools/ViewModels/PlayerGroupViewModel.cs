@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Aion2Tools.ViewModels;
@@ -10,13 +11,12 @@ public partial class PlayerGroupViewModel : ViewModelBase
 
     public string Title => $"{Number}번";
 
-    public string CountText => $"캐릭터 {1 + Alts.Count}";
-
     public CharacterRowViewModel Main { get; }
 
     public IReadOnlyList<CharacterRowViewModel> Alts { get; }
 
-    public bool HasAlts => Alts.Count > 0;
+    /// <summary>The main then the alts, as the card and the edit panel list them.</summary>
+    public IReadOnlyList<CharacterRowViewModel> Rows { get; }
 
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
@@ -26,5 +26,6 @@ public partial class PlayerGroupViewModel : ViewModelBase
         Number = number;
         Main = main;
         Alts = alts;
+        Rows = alts.Prepend(main).ToList();
     }
 }

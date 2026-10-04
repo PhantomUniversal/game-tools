@@ -108,8 +108,10 @@ public partial class RosterViewModel : ViewModelBase
         }
 
         int number = SelectedGroupOrNull.Number;
-        Characters.Add(CreateCharacter(number, false));
+        CharacterData alt = CreateCharacter(number, false);
+        Characters.Add(alt);
         RebuildGroups(number);
+        SelectedGroupOrNull!.Alts.Single(row => row.Character == alt).IsExpanded = true;
     }
 
     [RelayCommand]
@@ -135,18 +137,6 @@ public partial class RosterViewModel : ViewModelBase
         {
             ImportText = string.Empty;
         }
-    }
-
-    [RelayCommand]
-    private void SelectAll()
-    {
-        SetSelected(true);
-    }
-
-    [RelayCommand]
-    private void SelectNone()
-    {
-        SetSelected(false);
     }
 
     [RelayCommand]
@@ -189,9 +179,16 @@ public partial class RosterViewModel : ViewModelBase
         return character;
     }
 
-    /// <summary>Recreates the cards from the flat list and reselects the group with this number (0 = none).</summary>
+    /// <summary>Recreates the cards from the flat list and reselects the group with this number (0 = none).
+    /// Foldouts keep their open state; a new row opens its main and keeps alts folded.</summary>
     private void RebuildGroups(int selectNumber)
     {
+        HashSet<CharacterData> expanded = Groups
+            .SelectMany(group => group.Rows)
+            .Where(row => row.IsExpanded)
+            .Select(row => row.Character)
+            .ToHashSet();
+        HashSet<CharacterData> known = Groups.SelectMany(group => group.Rows).Select(row => row.Character).ToHashSet();
         foreach (PlayerGroupViewModel group in Groups)
         {
             group.Main.Detach();
@@ -205,8 +202,12 @@ public partial class RosterViewModel : ViewModelBase
         Groups.Clear();
         foreach (IGrouping<int, CharacterData> group in Characters.GroupBy(character => character.Number).OrderBy(group => group.Key))
         {
-            CharacterRowViewModel main = new CharacterRowViewModel(group.First(character => character.IsMain), _data);
-            List<CharacterRowViewModel> alts = group.Where(character => !character.IsMain).Select(character => new CharacterRowViewModel(character, _data)).ToList();
+            CharacterData mainCharacter = group.First(character => character.IsMain);
+            CharacterRowViewModel main = new CharacterRowViewModel(mainCharacter, _data, expanded.Contains(mainCharacter) || !known.Contains(mainCharacter));
+            List<CharacterRowViewModel> alts = group
+                .Where(character => !character.IsMain)
+                .Select(character => new CharacterRowViewModel(character, _data, expanded.Contains(character)))
+                .ToList();
             Groups.Add(new PlayerGroupViewModel(group.Key, main, alts));
         }
 
@@ -224,13 +225,5 @@ public partial class RosterViewModel : ViewModelBase
         SelectedGroupOrNull = Groups.FirstOrDefault(group => group.Number == selectNumber);
         OnPropertyChanged(nameof(CanAddGroup));
         OnPropertyChanged(nameof(CountText));
-    }
-
-    private void SetSelected(bool isSelected)
-    {
-        foreach (CharacterData character in Characters)
-        {
-            character.IsSelected = isSelected;
-        }
     }
 }

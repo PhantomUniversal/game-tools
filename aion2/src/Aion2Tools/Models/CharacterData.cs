@@ -30,10 +30,6 @@ public partial class CharacterData : ObservableObject
     [ObservableProperty]
     public partial bool IsMain { get; set; }
 
-    /// <summary>Available this time. Only checked characters go into a composition.</summary>
-    [ObservableProperty]
-    public partial bool IsSelected { get; set; } = true;
-
     public CharacterData()
     {
     }

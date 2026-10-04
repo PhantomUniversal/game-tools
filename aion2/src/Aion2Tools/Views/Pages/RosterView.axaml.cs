@@ -29,11 +29,21 @@ public partial class RosterView : UserControl
         (DataContext as RosterViewModel)?.AddAltCommand.Execute(null);
     }
 
+    /// <summary>Handled here so the tap does not also reach the fold header it sits in.</summary>
     private void OnRemoveAltTapped(object? sender, TappedEventArgs e)
     {
+        e.Handled = true;
         if (sender is Control control && control.DataContext is CharacterRowViewModel row && DataContext is RosterViewModel viewModel)
         {
             viewModel.RemoveAlt(row);
+        }
+    }
+
+    private void OnFoldTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control control && control.DataContext is CharacterRowViewModel row)
+        {
+            row.ToggleExpanded();
         }
     }
 

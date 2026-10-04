@@ -47,12 +47,12 @@ public partial class RotationViewModel : ViewModelBase
     [RelayCommand]
     private void Compose()
     {
-        List<CharacterData> selected = SettingsService.Settings.Characters.Where(character => character.IsSelected).ToList();
+        List<CharacterData> characters = SettingsService.Settings.Characters.ToList();
         RunHeaders.Clear();
         Rows.Clear();
         Runs.Clear();
         int runCount = RunCount.HasValue ? (int)RunCount.Value : 1;
-        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(selected, Preset.CreateEffective(), _data, runCount, IsMainFirst, SEED);
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(characters, Preset.CreateEffective(), _data, runCount, IsMainFirst, SEED);
         if (runs.Count == 0)
         {
             StatusText = "편성할 수 있는 캐릭터가 없습니다.";
@@ -65,13 +65,13 @@ public partial class RotationViewModel : ViewModelBase
             Runs.Add(new PartyResultViewModel($"{index + 1}회차", runs[index], _data));
         }
 
-        foreach (IGrouping<int, CharacterData> player in selected.GroupBy(character => character.Number).OrderBy(group => group.Key))
+        foreach (IGrouping<int, CharacterData> player in characters.GroupBy(character => character.Number).OrderBy(group => group.Key))
         {
             Rows.Add(CreateRow(player.Key, player.ToList(), runs));
         }
 
         int seated = runs.Sum(run => run.Parties.Sum(party => party.Members.Count));
-        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 / 참가 캐릭터 {selected.Count}개";
+        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 / 캐릭터 {characters.Count}개";
     }
 
     private RotationRowViewModel CreateRow(int number, List<CharacterData> characters, IReadOnlyList<PartyResultModel> runs)
