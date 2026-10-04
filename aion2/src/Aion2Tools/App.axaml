@@ -16,6 +16,9 @@
         <SolidColorBrush x:Key="MutedBrush" Color="#9AA1B5" />
         <SolidColorBrush x:Key="AccentBrush" Color="#7C9CFF" />
         <SolidColorBrush x:Key="WarnBrush" Color="#F6AD55" />
+        <SolidColorBrush x:Key="MainRowBrush" Color="#1C2540" />
+        <SolidColorBrush x:Key="SunkenBrush" Color="#12141B" />
+        <SolidColorBrush x:Key="ChipBrush" Color="#343A4E" />
     </Application.Resources>
 
     <Application.Styles>

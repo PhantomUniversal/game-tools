@@ -5,6 +5,9 @@ public class ClassRecord
 {
     public string Id { get; set; } = string.Empty;
 
+    /// <summary>Shown before the name wherever a class is picked. An emoji, so the data can change it.</summary>
+    public string Icon { get; set; } = string.Empty;
+
     public string Name { get; set; } = string.Empty;
 
     public RoleKind Role { get; set; }

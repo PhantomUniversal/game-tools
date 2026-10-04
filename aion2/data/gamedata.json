@@ -1,15 +1,15 @@
 {
   "Version": 1,
   "Classes": [
-    { "Id": "guardian", "Name": "수호성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 1 },
-    { "Id": "gladiator", "Name": "검성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 0 },
-    { "Id": "assassin", "Name": "살성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 3, "PreferredParty": 0 },
-    { "Id": "ranger", "Name": "궁성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 1, "PreferredParty": 0 },
-    { "Id": "sorcerer", "Name": "마도성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 2, "PreferredParty": 0 },
-    { "Id": "spiritmaster", "Name": "정령성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 1, "PreferredParty": 0 },
-    { "Id": "cleric", "Name": "치유성", "Role": "Healer", "IsRaidDebuff": false, "BuffPriority": 0, "PreferredParty": 0 },
-    { "Id": "chanter", "Name": "호법성", "Role": "Support", "IsRaidDebuff": false, "BuffPriority": 0, "PreferredParty": 0 },
-    { "Id": "fighter", "Name": "권성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 2, "PreferredParty": 0 }
+    { "Id": "guardian", "Icon": "🛡️", "Name": "수호성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 1 },
+    { "Id": "gladiator", "Icon": "⚔️", "Name": "검성", "Role": "Tank", "IsRaidDebuff": true, "BuffPriority": 0, "PreferredParty": 0 },
+    { "Id": "assassin", "Icon": "🗡️", "Name": "살성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 3, "PreferredParty": 0 },
+    { "Id": "ranger", "Icon": "🏹", "Name": "궁성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 1, "PreferredParty": 0 },
+    { "Id": "sorcerer", "Icon": "🔥", "Name": "마도성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 2, "PreferredParty": 0 },
+    { "Id": "spiritmaster", "Icon": "🌀", "Name": "정령성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 1, "PreferredParty": 0 },
+    { "Id": "cleric", "Icon": "💚", "Name": "치유성", "Role": "Healer", "IsRaidDebuff": false, "BuffPriority": 0, "PreferredParty": 0 },
+    { "Id": "chanter", "Icon": "📿", "Name": "호법성", "Role": "Support", "IsRaidDebuff": false, "BuffPriority": 0, "PreferredParty": 0 },
+    { "Id": "fighter", "Icon": "👊", "Name": "권성", "Role": "Dealer", "IsRaidDebuff": false, "BuffPriority": 2, "PreferredParty": 0 }
   ],
   "Presets": [
     { "Id": "sanctuary-rudra", "Name": "성역 · 루드라 (10인)", "PartyCount": 2, "PartySize": 5, "MinItemLevel": 2700, "MinCombatPower": 0 },
