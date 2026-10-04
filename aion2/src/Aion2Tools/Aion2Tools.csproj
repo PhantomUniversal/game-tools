@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Aion2Tools</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Where a published copy came from, so it can pull and rebuild itself from the settings
+       page. Release only; the installer build passes -p:StampSource=false. -->
+  <Target Name="StampSource" BeforeTargets="GetAssemblyAttributes" Condition="'$(Configuration)'=='Release' and '$(StampSource)'!='false'">
+    <PropertyGroup>
+      <Aion2SourceFolder>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../..'))</Aion2SourceFolder>
+    </PropertyGroup>
+    <Exec Command="git rev-list -1 HEAD -- ." WorkingDirectory="$(Aion2SourceFolder)" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="Aion2SourceCommit" />
+    </Exec>
+    <ItemGroup>
+      <AssemblyMetadata Include="Aion2SourceFolder" Value="$(Aion2SourceFolder)" />
+      <AssemblyMetadata Include="Aion2SourceCommit" Value="$(Aion2SourceCommit)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <!-- The game data the app falls back to when nothing newer has been downloaded. -->
+    <EmbeddedResource Include="..\..\data\gamedata.json" LogicalName="gamedata.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+</Project>

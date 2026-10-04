@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Aion2Tools.ViewModels"
+             x:Class="Aion2Tools.Views.Pages.RotationView"
+             x:DataType="vm:RotationViewModel">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" Text="본부 조합 (본캐 · 부캐 로테이션)" Classes="h1" Margin="0,0,0,12" />
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+            <ContentControl Content="{Binding Preset}" Margin="0,0,12,6" />
+            <TextBlock Text="회차" VerticalAlignment="Center" Classes="muted" Margin="0,0,8,6" />
+            <NumericUpDown Value="{Binding RunCount}" Minimum="1" Maximum="10" FormatString="0" Width="110" Margin="0,0,12,6" />
+            <CheckBox Content="본캐 1회차 몰아주기" IsChecked="{Binding IsMainFirst}" Margin="0,0,12,6" />
+            <Button Content="▶ 로테이션 생성" Classes="accent" Command="{Binding ComposeCommand}" Margin="0,0,0,6" />
+        </WrapPanel>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}" Classes="muted" Margin="0,0,0,10" />
+
+        <ScrollViewer Grid.Row="3">
+            <StackPanel Spacing="16">
+                <Border Classes="card">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="플레이어" Width="90" Classes="muted" />
+                            <TextBlock Text="캐릭터 (★ 본캐)" Width="300" Classes="muted" />
+                            <ItemsControl ItemsSource="{Binding RunHeaders}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding}" Width="170" Classes="muted" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:RotationRowViewModel">
+                                    <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Player}" Width="90" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding Characters}" Width="300" TextWrapping="Wrap" Classes="muted" Margin="0,0,10,0" />
+                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="x:String">
+                                                        <TextBlock Text="{Binding}" Width="170" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Runs}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="20" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

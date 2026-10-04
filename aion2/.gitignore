@@ -1,0 +1,9 @@
+# The roster and downloaded game data, written beside the executable.
+settings/
+
+# The last output folder each build PC published to - differs per machine.
+.publish-path
+.installer-path
+
+# Where setup/windows/build-installer.bat puts the installer when not told another folder.
+/dist/
