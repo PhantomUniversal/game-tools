@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using Aion2Tools.Models;
 using Avalonia.Threading;
@@ -10,6 +11,7 @@ namespace Aion2Tools.Services;
 public static class SettingsService
 {
     private const int SAVE_DELAY_MILLISECONDS = 500;
+    private const string LEGACY_PROFILE_NAME = "기본";
 
     private static DispatcherTimer? _saveTimerOrNull;
 
@@ -23,12 +25,12 @@ public static class SettingsService
         _saveTimerOrNull.Interval = TimeSpan.FromMilliseconds(SAVE_DELAY_MILLISECONDS);
         _saveTimerOrNull.Tick += OnSaveTimerTick;
 
-        foreach (CharacterData character in Settings.Characters)
+        foreach (ProfileData profile in Settings.Profiles)
         {
-            character.PropertyChanged += OnCharacterChanged;
+            WatchProfile(profile);
         }
 
-        Settings.Characters.CollectionChanged += OnCharactersChanged;
+        Settings.Profiles.CollectionChanged += OnProfilesChanged;
     }
 
     public static void ScheduleSave()
@@ -71,11 +73,27 @@ public static class SettingsService
                 return new AppSettings();
             }
 
-            foreach (CharacterData character in loadedOrNull.Characters)
+            if (loadedOrNull.LegacyCharactersOrNull is not null)
             {
-                if (character.ClassId is null)
+                if (loadedOrNull.LegacyCharactersOrNull.Count > 0)
                 {
-                    character.ClassId = string.Empty;
+                    ProfileData legacy = new ProfileData();
+                    legacy.Name = LEGACY_PROFILE_NAME;
+                    legacy.Characters = loadedOrNull.LegacyCharactersOrNull;
+                    loadedOrNull.Profiles.Add(legacy);
+                }
+
+                loadedOrNull.LegacyCharactersOrNull = null;
+            }
+
+            foreach (ProfileData profile in loadedOrNull.Profiles)
+            {
+                foreach (CharacterData character in profile.Characters)
+                {
+                    if (character.ClassId is null)
+                    {
+                        character.ClassId = string.Empty;
+                    }
                 }
             }
 
@@ -87,20 +105,45 @@ public static class SettingsService
         }
     }
 
-    private static void OnCharactersChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    /// <summary>Saves on any change to the profile, its list, or a character in it.</summary>
+    private static void WatchProfile(ProfileData profile)
+    {
+        profile.PropertyChanged += OnItemChanged;
+        foreach (CharacterData character in profile.Characters)
+        {
+            character.PropertyChanged += OnItemChanged;
+        }
+
+        profile.Characters.CollectionChanged += OnCharactersChanged;
+    }
+
+    private static void OnProfilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.NewItems is not null)
         {
-            foreach (CharacterData character in e.NewItems)
+            foreach (ProfileData profile in e.NewItems)
             {
-                character.PropertyChanged += OnCharacterChanged;
+                WatchProfile(profile);
             }
         }
 
         ScheduleSave();
     }
 
-    private static void OnCharacterChanged(object? sender, EventArgs e)
+    private static void OnCharactersChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems is not null)
+        {
+            foreach (CharacterData character in e.NewItems)
+            {
+                character.PropertyChanged += OnItemChanged;
+            }
+        }
+
+        ScheduleSave();
+    }
+
+    private static void OnItemChanged(object? sender, PropertyChangedEventArgs e)
     {
         ScheduleSave();
     }

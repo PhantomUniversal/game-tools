@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>The preset box and its two cuts, shared by the party and rotation pages.</summary>
+/// <summary>The preset box and its two cuts on the party page.</summary>
 public partial class PresetPickerViewModel : ViewModelBase
 {
     [ObservableProperty]

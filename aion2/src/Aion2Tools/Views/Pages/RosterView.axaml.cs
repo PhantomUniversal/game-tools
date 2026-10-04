@@ -106,7 +106,7 @@ public partial class RosterView : UserControl
 
         FilePickerSaveOptions options = new FilePickerSaveOptions();
         options.Title = "명단 내보내기";
-        options.SuggestedFileName = "aion2-roster.csv";
+        options.SuggestedFileName = $"{viewModel.Profile.Name}.csv";
         options.DefaultExtension = "csv";
         options.FileTypeChoices = new[] { CSV_TYPE };
         IStorageFile? fileOrNull = await topLevelOrNull.StorageProvider.SaveFilePickerAsync(options);

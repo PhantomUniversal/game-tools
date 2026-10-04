@@ -97,22 +97,36 @@
 
         <!-- Left: the group cards. -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*" Margin="24,20,24,0">
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
-                <StackPanel VerticalAlignment="Center" Spacing="2">
-                    <TextBlock Text="캐릭터 명단" Classes="pageTitle" />
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="{Binding CountText}" Classes="meta" />
-                        <TextBlock Text="{Binding StatusText}" Classes="meta" />
+            <!-- The profile: back to the list, its name and member limit, and the roster actions. -->
+            <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,16">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button Content="‹  프로필 목록" Classes="tight" Command="{Binding CloseCommand}" />
+                    <Button Grid.Column="2" Content="프로필 삭제" Classes="danger tight" Command="{Binding DeleteProfileCommand}" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,12,Auto,*,Auto">
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="프로필 이름" Classes="fieldLabel" />
+                        <TextBox Text="{Binding Profile.Name}" Width="240" />
                     </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="정원" Classes="fieldLabel" />
+                        <NumericUpDown Value="{Binding MaxGroupCount, Converter={x:Static views:IgnoreNullConverter.Instance}}"
+                                       Minimum="{Binding MinMaxGroupCount}" Maximum="{Binding MaxMaxGroupCount}"
+                                       FormatString="0" Width="130" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                        <Button Content="명단 비우기" Classes="danger" Command="{Binding ClearCommand}" />
+                        <Button Content="불러오기" Click="OnImportClick" />
+                        <Button Content="내보내기" Click="OnExportClick" />
+                        <Button Content="+  새 그룹" Classes="accent" Command="{Binding AddGroupCommand}"
+                                IsEnabled="{Binding CanAddGroup}" />
+                    </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding CountText}" Classes="meta" />
+                    <TextBlock Text="{Binding StatusText}" Classes="meta" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Content="명단 비우기" Classes="danger" Command="{Binding ClearCommand}" />
-                    <Button Content="불러오기" Click="OnImportClick" />
-                    <Button Content="내보내기" Click="OnExportClick" />
-                    <Button Content="+  새 그룹" Classes="accent" Command="{Binding AddGroupCommand}"
-                            IsEnabled="{Binding CanAddGroup}" />
-                </StackPanel>
-            </Grid>
+            </StackPanel>
 
             <!-- Columns fill the width (set in code-behind); every tile in a row stretches to that row's height. -->
             <ScrollViewer Grid.Row="1" SizeChanged="OnCardWallSizeChanged">
@@ -168,7 +182,7 @@
                         </DataTemplate>
 
                         <!-- The outline tile that makes a new group; it takes the height of the row it ends up in. -->
-                        <DataTemplate DataType="vm:AddGroupTileViewModel">
+                        <DataTemplate DataType="vm:AddTileViewModel">
                             <Border Classes="addTile" MinHeight="70" Margin="0,0,14,14" Tapped="OnAddGroupTapped">
                                 <TextBlock Text="+  새 그룹" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>

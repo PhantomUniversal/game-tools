@@ -30,8 +30,8 @@
         <DataTemplate DataType="vm:PartyViewModel">
             <pages:PartyView />
         </DataTemplate>
-        <DataTemplate DataType="vm:RotationViewModel">
-            <pages:RotationView />
+        <DataTemplate DataType="vm:ProfilesViewModel">
+            <pages:ProfilesView />
         </DataTemplate>
         <DataTemplate DataType="vm:RosterViewModel">
             <pages:RosterView />
@@ -40,7 +40,7 @@
             <pages:SettingsView />
         </DataTemplate>
 
-        <!-- The preset box and its cuts, shared by both composition pages. -->
+        <!-- The preset box and its cuts on the party page. -->
         <DataTemplate DataType="vm:PresetPickerViewModel">
             <StackPanel Orientation="Horizontal" Spacing="16">
                 <StackPanel>

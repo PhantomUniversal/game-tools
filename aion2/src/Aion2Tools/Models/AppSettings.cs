@@ -1,14 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace Aion2Tools.Models;
 
 /// <summary>Everything the user changes, saved to settings/settings.json beside the executable.</summary>
 public class AppSettings
 {
-    public const int DEFAULT_MAX_GROUP_COUNT = 128;
-    public const int MIN_MAX_GROUP_COUNT = 1;
-    public const int MAX_MAX_GROUP_COUNT = 999;
-
     public const string DEFAULT_GAME_DATA_URL = "https://raw.githubusercontent.com/PhantomUniversal/game-tools/main/aion2/data/gamedata.json";
 
     public string GameDataUrl { get; set; } = DEFAULT_GAME_DATA_URL;
@@ -17,10 +14,12 @@ public class AppSettings
 
     public string PresetId { get; set; } = string.Empty;
 
-    /// <summary>How many groups the roster holds; one group per legion member.</summary>
-    public int MaxGroupCount { get; set; } = DEFAULT_MAX_GROUP_COUNT;
+    public ObservableCollection<ProfileData> Profiles { get; set; } = new ObservableCollection<ProfileData>();
 
-    public ObservableCollection<CharacterData> Characters { get; set; } = new ObservableCollection<CharacterData>();
+    /// <summary>The single roster saved before profiles existed; moved into a profile on load and not written again.</summary>
+    [JsonPropertyName("Characters")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ObservableCollection<CharacterData>? LegacyCharactersOrNull { get; set; }
 
     public AppSettings()
     {

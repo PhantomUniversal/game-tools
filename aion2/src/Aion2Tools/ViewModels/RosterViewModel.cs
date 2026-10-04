@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -8,20 +9,39 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>The roster as numbered group cards, with the selected group edited in the side panel.
+/// <summary>One profile's roster as numbered group cards, with the selected group edited in the side panel.
 /// The saved list stays flat (number + main flag); the groups are rebuilt from it after each change.</summary>
 public partial class RosterViewModel : ViewModelBase
 {
+    private readonly Action _close;
+    private readonly Action _delete;
+
     private GameDataTable _data;
 
-    private ObservableCollection<CharacterData> Characters => SettingsService.Settings.Characters;
+    public ProfileData Profile { get; }
+
+    private ObservableCollection<CharacterData> Characters => Profile.Characters;
 
     public ObservableCollection<PlayerGroupViewModel> Groups { get; } = new ObservableCollection<PlayerGroupViewModel>();
 
     /// <summary>What the card wall shows: the groups, then the add tile while there is room for another.</summary>
     public ObservableCollection<ViewModelBase> Tiles { get; } = new ObservableCollection<ViewModelBase>();
 
-    private static int MaxGroupCount => SettingsService.Settings.MaxGroupCount;
+    public int MinMaxGroupCount => ProfileData.MIN_MAX_GROUP_COUNT;
+
+    public int MaxMaxGroupCount => ProfileData.MAX_MAX_GROUP_COUNT;
+
+    /// <summary>The profile's card limit; the add tile and the count follow it.</summary>
+    public int MaxGroupCount
+    {
+        get => Profile.MaxGroupCount;
+        set
+        {
+            Profile.MaxGroupCount = Math.Clamp(value, ProfileData.MIN_MAX_GROUP_COUNT, ProfileData.MAX_MAX_GROUP_COUNT);
+            RebuildGroups(SelectedNumber());
+            OnPropertyChanged();
+        }
+    }
 
     public bool CanAddGroup => Groups.Count < MaxGroupCount;
 
@@ -39,8 +59,11 @@ public partial class RosterViewModel : ViewModelBase
     [ObservableProperty]
     public partial string StatusText { get; set; } = string.Empty;
 
-    public RosterViewModel(GameDataTable data)
+    public RosterViewModel(ProfileData profile, GameDataTable data, Action close, Action delete)
     {
+        Profile = profile;
+        _close = close;
+        _delete = delete;
         _data = data;
         Classes = data.Classes;
         RosterService.NormalizeMains(Characters);
@@ -51,12 +74,6 @@ public partial class RosterViewModel : ViewModelBase
     {
         _data = data;
         Classes = data.Classes;
-        RebuildGroups(SelectedNumber());
-    }
-
-    /// <summary>Called when the group limit changes in settings, so the add tile and the count follow it.</summary>
-    public void RefreshLimit()
-    {
         RebuildGroups(SelectedNumber());
     }
 
@@ -117,6 +134,19 @@ public partial class RosterViewModel : ViewModelBase
         Characters.Add(alt);
         RebuildGroups(number);
         SelectedGroupOrNull!.Alts.Single(row => row.Character == alt).IsExpanded = true;
+    }
+
+    /// <summary>Back to the profile list.</summary>
+    [RelayCommand]
+    private void Close()
+    {
+        _close();
+    }
+
+    [RelayCommand]
+    private void DeleteProfile()
+    {
+        _delete();
     }
 
     [RelayCommand]
@@ -232,7 +262,7 @@ public partial class RosterViewModel : ViewModelBase
 
         if (CanAddGroup)
         {
-            Tiles.Add(new AddGroupTileViewModel());
+            Tiles.Add(new AddTileViewModel());
         }
 
         SelectedGroupOrNull = Groups.FirstOrDefault(group => group.Number == selectNumber);

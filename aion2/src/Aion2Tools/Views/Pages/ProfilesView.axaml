@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Aion2Tools.ViewModels"
+             x:Class="Aion2Tools.Views.Pages.ProfilesView"
+             x:DataType="vm:ProfilesViewModel">
+    <Panel>
+        <!-- The profile list; tapping a card opens its member cards. -->
+        <Grid RowDefinitions="Auto,*" Margin="24,20,24,0" IsVisible="{Binding IsListShown}">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                <TextBlock Text="프로필" Classes="pageTitle" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="+  새 프로필" Classes="accent" Command="{Binding AddProfileCommand}"
+                        VerticalAlignment="Center" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" SizeChanged="OnCardWallSizeChanged">
+                <ItemsControl x:Name="CardWall" ItemsSource="{Binding Tiles}" Margin="0,0,-14,24">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.DataTemplates>
+                        <DataTemplate DataType="vm:ProfileCardViewModel">
+                            <Border Classes="card clickable" Margin="0,0,14,14" Tapped="OnProfileTapped">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding DisplayName}" Classes="cardTitle" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding SummaryText}" Classes="meta" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                        <DataTemplate DataType="vm:AddTileViewModel">
+                            <Border Classes="addTile" MinHeight="64" Margin="0,0,14,14" Tapped="OnAddProfileTapped">
+                                <TextBlock Text="+  새 프로필" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.DataTemplates>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <ContentControl Content="{Binding OpenRosterOrNull}" IsVisible="{Binding !IsListShown}" />
+    </Panel>
+</UserControl>

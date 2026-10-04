@@ -1,5 +1,6 @@
 using Aion2Tools.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 
@@ -12,10 +13,18 @@ public partial class PartyView : UserControl
         InitializeComponent();
     }
 
-    /// <summary>The selected composition as plain text, for pasting into a chat.</summary>
+    private void OnMemberTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control control && control.DataContext is PartyMemberViewModel member && DataContext is PartyViewModel viewModel)
+        {
+            viewModel.ToggleMember(member);
+        }
+    }
+
+    /// <summary>The result as plain text, for pasting into a chat.</summary>
     private async void OnCopyClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not PartyViewModel viewModel || viewModel.SelectedResultOrNull is null)
+        if (DataContext is not PartyViewModel viewModel || !viewModel.HasResult)
         {
             return;
         }
@@ -26,7 +35,7 @@ public partial class PartyView : UserControl
             return;
         }
 
-        await clipboardOrNull.SetTextAsync(viewModel.SelectedResultOrNull.ToText());
+        await clipboardOrNull.SetTextAsync(viewModel.ToText());
         viewModel.StatusText = "클립보드에 복사했습니다.";
     }
 }
