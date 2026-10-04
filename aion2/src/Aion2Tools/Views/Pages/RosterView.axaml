@@ -93,17 +93,25 @@
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <Grid ColumnDefinitions="*,1,360">
+    <Grid ColumnDefinitions="*,Auto">
 
         <!-- Left: the group cards. -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*" Margin="24,20,24,0">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
                 <StackPanel VerticalAlignment="Center" Spacing="2">
                     <TextBlock Text="캐릭터 명단" Classes="pageTitle" />
-                    <TextBlock Text="{Binding CountText}" Classes="meta" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="{Binding CountText}" Classes="meta" />
+                        <TextBlock Text="{Binding StatusText}" Classes="meta" />
+                    </StackPanel>
                 </StackPanel>
-                <Button Grid.Column="1" Content="+  새 그룹" Classes="accent" Command="{Binding AddGroupCommand}"
-                        IsEnabled="{Binding CanAddGroup}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="명단 비우기" Classes="danger" Command="{Binding ClearCommand}" />
+                    <Button Content="불러오기" Click="OnImportClick" />
+                    <Button Content="내보내기" Click="OnExportClick" />
+                    <Button Content="+  새 그룹" Classes="accent" Command="{Binding AddGroupCommand}"
+                            IsEnabled="{Binding CanAddGroup}" />
+                </StackPanel>
             </Grid>
 
             <!-- Columns fill the width (set in code-behind); every tile in a row stretches to that row's height. -->
@@ -170,57 +178,42 @@
             </ScrollViewer>
         </Grid>
 
-        <Rectangle Grid.Column="1" Width="1" Fill="{StaticResource BorderBrushSoft}" />
-
-        <!-- Right: the selected group's foldouts, or the paste box when nothing is selected. -->
-        <Border Grid.Column="2" Background="{StaticResource NavBrush}">
-            <Panel>
-                <ScrollViewer IsVisible="{Binding HasSelection}">
-                    <StackPanel Margin="16,18,16,24" Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SelectedGroupOrNull.Main.DisplayName}" Classes="pageTitle"
-                                           VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis" />
-                                <Border Classes="badge">
-                                    <TextBlock Text="{Binding SelectedGroupOrNull.NumberText}" />
-                                </Border>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="그룹 삭제" Classes="danger tight" Command="{Binding RemoveGroupCommand}" />
-                            <Border Grid.Column="2" Classes="rowIcon" Margin="6,0,0,0" Tapped="OnClosePanelTapped">
-                                <Viewbox Width="12" Height="12">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M6,6 L18,18 M18,6 L6,18" />
-                                    </Canvas>
-                                </Viewbox>
+        <!-- Right: the selected group's foldouts, shown only while a group is selected. -->
+        <Border Grid.Column="1" Width="361" BorderThickness="1,0,0,0" BorderBrush="{StaticResource BorderBrushSoft}"
+                Background="{StaticResource NavBrush}" IsVisible="{Binding HasSelection}">
+            <ScrollViewer>
+                <StackPanel Margin="16,18,16,24" Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedGroupOrNull.Main.DisplayName}" Classes="pageTitle"
+                                       VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis" />
+                            <Border Classes="badge">
+                                <TextBlock Text="{Binding SelectedGroupOrNull.NumberText}" />
                             </Border>
-                        </Grid>
-
-                        <ItemsControl ItemsSource="{Binding SelectedGroupOrNull.Rows}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-
-                        <Border Classes="addTile" Height="38" Tapped="OnAddAltTapped">
-                            <TextBlock Text="+  부캐 추가" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="그룹 삭제" Classes="danger tight" Command="{Binding RemoveGroupCommand}" />
+                        <Border Grid.Column="2" Classes="rowIcon" Margin="6,0,0,0" Tapped="OnClosePanelTapped">
+                            <Viewbox Width="12" Height="12">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M6,6 L18,18 M18,6 L6,18" />
+                                </Canvas>
+                            </Viewbox>
                         </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <StackPanel Margin="16,18,16,24" Spacing="12" IsVisible="{Binding !HasSelection}">
-                    <TextBlock Text="명단 관리" Classes="pageTitle" />
-                    <Grid ColumnDefinitions="*,10,*">
-                        <Button Grid.Column="0" Content="불러오기" HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" Click="OnImportClick" />
-                        <Button Grid.Column="2" Content="내보내기" HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" Click="OnExportClick" />
                     </Grid>
-                    <TextBlock Text="{Binding StatusText}" Classes="meta" TextWrapping="Wrap" />
-                    <Button Content="명단 비우기" Classes="danger tight" HorizontalAlignment="Left" Command="{Binding ClearCommand}" />
+
+                    <ItemsControl ItemsSource="{Binding SelectedGroupOrNull.Rows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+
+                    <Border Classes="addTile" Height="38" Tapped="OnAddAltTapped">
+                        <TextBlock Text="+  부캐 추가" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
                 </StackPanel>
-            </Panel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>
