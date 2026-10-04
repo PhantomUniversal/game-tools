@@ -21,6 +21,19 @@ public partial class PartyView : UserControl
         }
     }
 
+    private void OnResultRowTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control control && control.DataContext is ResultRowViewModel row && DataContext is PartyViewModel viewModel)
+        {
+            viewModel.SelectRow(row);
+        }
+    }
+
+    private void OnCloseDetailTapped(object? sender, TappedEventArgs e)
+    {
+        (DataContext as PartyViewModel)?.CloseDetailCommand.Execute(null);
+    }
+
     /// <summary>The result as plain text, for pasting into a chat.</summary>
     private async void OnCopyClick(object? sender, RoutedEventArgs e)
     {

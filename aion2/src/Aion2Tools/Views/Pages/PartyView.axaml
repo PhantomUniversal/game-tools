@@ -7,21 +7,49 @@
              x:DataType="vm:PartyViewModel">
 
     <UserControl.Styles>
-        <!-- A member left out of this composition fades back. -->
+        <!-- A member row: one line, quiet until picked. -->
         <Style Selector="Border.member">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Border.member:pointerover">
+            <Setter Property="Background" Value="{StaticResource NavHoverBrush}" />
         </Style>
         <Style Selector="Border.member.selected">
             <Setter Property="Opacity" Value="1" />
+            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
+        </Style>
+
+        <!-- A member chip on a result row; a main gets the gold edge. -->
+        <Style Selector="Border.chip">
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="4,2,8,2" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
+            <Setter Property="Background" Value="{StaticResource PanelRaisedBrush}" />
+        </Style>
+        <Style Selector="Border.chip.main">
+            <Setter Property="BorderBrush" Value="{StaticResource BronzeBrush}" />
+            <Setter Property="Background" Value="{StaticResource AccentFillBrush}" />
+        </Style>
+        <Style Selector="TextBlock.warning">
+            <Setter Property="Foreground" Value="#F6AD55" />
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="300,*">
+    <Grid ColumnDefinitions="280,*,Auto">
 
-        <!-- Left: the profile and its member cards; a tap toggles who joins. -->
+        <!-- Left: the profile and its members; a tap toggles who joins. -->
         <Border Grid.Column="0" Background="{StaticResource NavBrush}" BorderThickness="0,0,1,0"
                 BorderBrush="{StaticResource BorderBrushSoft}">
-            <Grid RowDefinitions="Auto,Auto,*" Margin="16,18,16,0">
+            <Grid RowDefinitions="Auto,Auto,*" Margin="14,18,14,0">
                 <StackPanel Grid.Row="0" Margin="0,0,0,12">
                     <TextBlock Text="프로필" Classes="fieldLabel" />
                     <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Profiles}"
@@ -33,7 +61,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
-                <Grid Grid.Row="1" ColumnDefinitions="*,Auto,6,Auto" Margin="0,0,0,10">
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto,6,Auto" Margin="0,0,0,8">
                     <TextBlock Text="{Binding SelectionText}" Classes="meta" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="전체" Classes="tight" Command="{Binding SelectAllCommand}" />
                     <Button Grid.Column="3" Content="해제" Classes="tight" Command="{Binding SelectNoneCommand}" />
@@ -42,24 +70,21 @@
                     <ItemsControl ItemsSource="{Binding Members}" Margin="0,0,0,18">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Spacing="8" />
+                                <StackPanel Spacing="2" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="vm:PartyMemberViewModel">
-                                <Border Classes="card clickable member" Classes.selected="{Binding IsSelected}" Padding="12,10"
-                                        Tapped="OnMemberTapped">
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                        <Image Grid.Column="0" Width="30" Height="30" Margin="0,0,10,0"
+                                <Border Classes="member" Classes.selected="{Binding IsSelected}" Tapped="OnMemberTapped">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                        <Image Grid.Column="0" Width="22" Height="22" Margin="0,0,8,0"
                                                Source="{Binding ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                                            <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{StaticResource TextBrightBrush}"
-                                                       TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding DetailText}" Classes="meta" />
-                                        </StackPanel>
-                                        <Border Grid.Column="2" Classes="badge">
-                                            <TextBlock Text="{Binding NumberText}" />
-                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextBrightBrush}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2" Text="{Binding DetailText}" Classes="meta" VerticalAlignment="Center"
+                                                   Margin="8,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding NumberText}" Classes="meta" VerticalAlignment="Center"
+                                                   MinWidth="26" TextAlignment="Right" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -69,12 +94,12 @@
             </Grid>
         </Border>
 
-        <!-- Right: the options and the result. -->
-        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*" Margin="24,20,24,0">
+        <!-- Middle: the options, then one row per alternative or run. -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="24,20,24,0">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
                 <StackPanel Spacing="2" VerticalAlignment="Center">
                     <TextBlock Text="파티" Classes="pageTitle" />
-                    <TextBlock Text="{Binding StatusText}" Classes="meta" />
+                    <TextBlock Text="{Binding StatusText}" Classes="meta" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Button Content="텍스트 복사" Click="OnCopyClick" IsEnabled="{Binding HasResult}" />
@@ -82,7 +107,7 @@
                 </StackPanel>
             </Grid>
 
-            <WrapPanel Grid.Row="1" Margin="0,0,0,18">
+            <WrapPanel Grid.Row="1" Margin="0,0,0,10">
                 <ContentControl Content="{Binding Preset}" Margin="0,0,16,8" />
                 <StackPanel Margin="0,0,16,8">
                     <TextBlock Text="회차" Classes="fieldLabel" />
@@ -94,95 +119,76 @@
                 </StackPanel>
             </WrapPanel>
 
-            <StackPanel Grid.Row="2" IsVisible="{Binding HasAlternatives}" Margin="0,0,0,16">
-                <ListBox Classes="tabs" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResultOrNull}">
-                    <ListBox.ItemsPanel>
+            <ScrollViewer Grid.Row="2">
+                <ItemsControl ItemsSource="{Binding ResultRows}" Margin="0,0,0,24">
+                    <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
+                            <StackPanel Spacing="8" />
                         </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="vm:PartyResultViewModel">
-                            <TextBlock Text="{Binding Title}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <Border Classes="rule" />
-            </StackPanel>
-
-            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto">
-                <Panel Margin="0,0,0,24">
-                    <ContentControl Content="{Binding SelectedResultOrNull}" IsVisible="{Binding HasAlternatives}" />
-
-                    <!-- Several runs: who plays what per run, then each run's parties. -->
-                    <StackPanel Spacing="22" IsVisible="{Binding HasRuns}">
-                        <Border Classes="card" HorizontalAlignment="Left">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="번호" Width="70" Classes="meta" />
-                                    <TextBlock Text="캐릭터 (★ 본캐)" Width="300" Classes="meta" />
-                                    <ItemsControl ItemsSource="{Binding RunHeaders}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:ResultRowViewModel">
+                            <Border Classes="card clickable" Classes.selected="{Binding IsSelected}" Padding="14,10"
+                                    Tapped="OnResultRowTapped">
+                                <Grid ColumnDefinitions="76,*">
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" Classes="cardTitle" />
+                                        <TextBlock Text="{Binding CheckText}" Classes="meta" Classes.warning="{Binding HasWarning}" />
+                                    </StackPanel>
+                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding Parties}">
                                         <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="x:String">
-                                                <TextBlock Text="{Binding}" Width="170" Classes="meta" />
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                                <Border Classes="rule" />
-                                <ItemsControl ItemsSource="{Binding Rows}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="vm:RotationRowViewModel">
-                                            <Border BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="0,0,0,1" Padding="0,7">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Number}" Width="70" FontSize="13" FontWeight="SemiBold"
-                                                               Foreground="{StaticResource TextBrightBrush}" />
-                                                    <TextBlock Text="{Binding Characters}" Width="300" TextWrapping="Wrap" Classes="meta"
-                                                               Margin="0,0,10,0" />
-                                                    <ItemsControl ItemsSource="{Binding Cells}">
+                                            <DataTemplate DataType="vm:PartyCardViewModel">
+                                                <Grid ColumnDefinitions="44,*">
+                                                    <TextBlock Text="{Binding Title}" Classes="meta" Margin="0,4,0,0" />
+                                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding Members}">
                                                         <ItemsControl.ItemsPanel>
                                                             <ItemsPanelTemplate>
-                                                                <StackPanel Orientation="Horizontal" />
+                                                                <WrapPanel />
                                                             </ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
-                                                            <DataTemplate x:DataType="x:String">
-                                                                <TextBlock Text="{Binding}" Width="170" FontSize="13"
-                                                                           Foreground="{StaticResource TextLightBrush}" />
+                                                            <DataTemplate DataType="vm:MemberRowViewModel">
+                                                                <Border Classes="chip" Classes.main="{Binding IsMain}">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                                        <Image Width="18" Height="18"
+                                                                               Source="{Binding ClassId, Converter={x:Static views:ClassIconConverter.Instance}}" />
+                                                                        <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center"
+                                                                                   Foreground="{StaticResource TextBrightBrush}" />
+                                                                    </StackPanel>
+                                                                </Border>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <ItemsControl ItemsSource="{Binding Runs}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="22" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="vm:PartyResultViewModel">
-                                    <StackPanel Spacing="10">
-                                        <TextBlock Text="{Binding Title}" Classes="pageTitle" />
-                                        <ContentControl Content="{Binding}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Panel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
         </Grid>
+
+        <!-- Right: the selected row's parties, rule checks and bench. -->
+        <Border Grid.Column="2" Width="381" BorderThickness="1,0,0,0" BorderBrush="{StaticResource BorderBrushSoft}"
+                Background="{StaticResource NavBrush}" IsVisible="{Binding HasSelectedRow}">
+            <Grid RowDefinitions="Auto,*" Margin="16,18,16,0">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                    <TextBlock Text="{Binding SelectedRowOrNull.Title}" Classes="pageTitle" VerticalAlignment="Center" />
+                    <Border Grid.Column="1" Classes="rowIcon" Tapped="OnCloseDetailTapped">
+                        <Viewbox Width="12" Height="12">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M6,6 L18,18 M18,6 L6,18" />
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                </Grid>
+                <ScrollViewer Grid.Row="1">
+                    <ContentControl Content="{Binding SelectedRowOrNull.Result}" Margin="0,0,0,24" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>One line of a party card.</summary>
+/// <summary>One line of a party card, or one chip on a result row.</summary>
 public class MemberRowViewModel : ViewModelBase
 {
     private static readonly IBrush TANK_BRUSH = Brush.Parse("#63B3ED");
@@ -20,6 +20,8 @@ public class MemberRowViewModel : ViewModelBase
 
     public string Name { get; }
 
+    public bool IsMain { get; }
+
     public string Detail { get; }
 
     public string CombatPowerText { get; }
@@ -29,6 +31,7 @@ public class MemberRowViewModel : ViewModelBase
         ClassId = record.Id;
         RoleText = GetRoleText(record.Role);
         RoleBrush = GetRoleBrush(record.Role);
+        IsMain = character.IsMain;
         Name = (character.IsMain ? "★ " : string.Empty) + character.Name + (isBuffed ? " ⚡" : string.Empty);
         Detail = $"{record.Name} · {character.Number}번";
         CombatPowerText = character.CombatPower.HasValue ? $"{character.CombatPower.Value / 1000.0:0.0}k" : "-";

@@ -44,26 +44,20 @@ public partial class PartyViewModel : ViewModelBase
     [ObservableProperty]
     public partial decimal? MainRunCount { get; set; } = 2;
 
-    public ObservableCollection<PartyResultViewModel> Results { get; } = new ObservableCollection<PartyResultViewModel>();
+    /// <summary>The alternatives of one run, or the runs of a rotation, one row each.</summary>
+    public ObservableCollection<ResultRowViewModel> ResultRows { get; } = new ObservableCollection<ResultRowViewModel>();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasAlternatives))]
-    [NotifyPropertyChangedFor(nameof(HasResult))]
-    public partial PartyResultViewModel? SelectedResultOrNull { get; set; }
+    [NotifyPropertyChangedFor(nameof(HasSelectedRow))]
+    public partial ResultRowViewModel? SelectedRowOrNull { get; set; }
 
-    public bool HasAlternatives => SelectedResultOrNull is not null;
-
-    public ObservableCollection<string> RunHeaders { get; } = new ObservableCollection<string>();
-
-    public ObservableCollection<RotationRowViewModel> Rows { get; } = new ObservableCollection<RotationRowViewModel>();
-
-    public ObservableCollection<PartyResultViewModel> Runs { get; } = new ObservableCollection<PartyResultViewModel>();
+    public bool HasSelectedRow => SelectedRowOrNull is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResult))]
-    public partial bool HasRuns { get; set; }
+    public partial bool IsRotationResult { get; set; }
 
-    public bool HasResult => HasAlternatives || HasRuns;
+    public bool HasResult => ResultRows.Count > 0;
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = "프로필과 참가할 카드를 고른 뒤 자동 조합을 누르세요.";
@@ -107,22 +101,35 @@ public partial class PartyViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectionText));
     }
 
-    /// <summary>The result as plain text, for pasting into a chat.</summary>
+    /// <summary>Tapping the selected row again closes the side panel.</summary>
+    public void SelectRow(ResultRowViewModel row)
+    {
+        SelectedRowOrNull = row == SelectedRowOrNull ? null : row;
+    }
+
+    /// <summary>The result as plain text, for pasting into a chat: every run of a rotation, or the alternative in view.</summary>
     public string ToText()
     {
-        if (!HasRuns)
+        if (!IsRotationResult)
         {
-            return SelectedResultOrNull is null ? string.Empty : SelectedResultOrNull.ToText();
+            ResultRowViewModel? rowOrNull = SelectedRowOrNull is null ? ResultRows.FirstOrDefault() : SelectedRowOrNull;
+            return rowOrNull is null ? string.Empty : rowOrNull.Result.ToText();
         }
 
         StringBuilder text = new StringBuilder();
-        foreach (PartyResultViewModel run in Runs)
+        foreach (ResultRowViewModel row in ResultRows)
         {
-            text.AppendLine($"== {run.Title} ==");
-            text.Append(run.ToText());
+            text.AppendLine($"== {row.Title} ==");
+            text.Append(row.Result.ToText());
         }
 
         return text.ToString();
+    }
+
+    [RelayCommand]
+    private void CloseDetail()
+    {
+        SelectedRowOrNull = null;
     }
 
     [RelayCommand]
@@ -181,10 +188,10 @@ public partial class PartyViewModel : ViewModelBase
 
         for (int index = 0; index < results.Count; index++)
         {
-            Results.Add(new PartyResultViewModel($"조합 {index + 1}", results[index], _data));
+            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"조합 {index + 1}", results[index], _data)));
         }
 
-        SelectedResultOrNull = Results[0];
+        ShowResult(false);
         StatusText = $"{numbers.Count}명 · 캐릭터 {characters.Count}개 · {preset.Name} · 대안 {results.Count}개";
     }
 
@@ -210,29 +217,41 @@ public partial class PartyViewModel : ViewModelBase
 
         for (int index = 0; index < runs.Count; index++)
         {
-            RunHeaders.Add($"{index + 1}회차");
-            Runs.Add(new PartyResultViewModel($"{index + 1}회차", runs[index], _data));
+            ResultRows.Add(new ResultRowViewModel(new PartyResultViewModel($"{index + 1}회차", runs[index], _data)));
         }
 
-        foreach (IGrouping<int, CharacterData> player in characters.GroupBy(character => character.Number).OrderBy(group => group.Key))
-        {
-            Rows.Add(CreateRow(player.Key, player.ToList(), runs));
-        }
-
-        HasRuns = true;
+        ShowResult(true);
         int seated = runs.Sum(run => run.Parties.Sum(party => party.Members.Count));
         int mainSeats = runs.Sum(run => run.Parties.Sum(party => party.Members.Count(member => member.IsMain)));
         StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 (본캐 {mainSeats} · 부캐 {seated - mainSeats})";
     }
 
+    private void ShowResult(bool isRotation)
+    {
+        IsRotationResult = isRotation;
+        OnPropertyChanged(nameof(HasResult));
+        SelectedRowOrNull = ResultRows[0];
+    }
+
     private void ClearResults()
     {
-        Results.Clear();
-        SelectedResultOrNull = null;
-        RunHeaders.Clear();
-        Rows.Clear();
-        Runs.Clear();
-        HasRuns = false;
+        SelectedRowOrNull = null;
+        ResultRows.Clear();
+        IsRotationResult = false;
+        OnPropertyChanged(nameof(HasResult));
+    }
+
+    partial void OnSelectedRowOrNullChanged(ResultRowViewModel? oldValue, ResultRowViewModel? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.IsSelected = false;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.IsSelected = true;
+        }
     }
 
     private void RebuildMembers()
@@ -285,42 +304,6 @@ public partial class PartyViewModel : ViewModelBase
     private int GetRunCount()
     {
         return RunCount.HasValue ? (int)RunCount.Value : 1;
-    }
-
-    private RotationRowViewModel CreateRow(int number, List<CharacterData> characters, IReadOnlyList<PartyResultModel> runs)
-    {
-        List<string> cells = new List<string>();
-        foreach (PartyResultModel run in runs)
-        {
-            cells.Add(GetCell(characters, run));
-        }
-
-        IEnumerable<string> names = characters
-            .OrderByDescending(character => character.IsMain)
-            .Select(character => GetMainMark(character) + character.Name + "(" + GetClassName(character) + ")");
-        return new RotationRowViewModel($"#{number}", string.Join(", ", names), cells);
-    }
-
-    /// <summary>The character this player brings to the run, or a dash.</summary>
-    private static string GetCell(List<CharacterData> characters, PartyResultModel run)
-    {
-        foreach (PartyModel party in run.Parties)
-        {
-            foreach (CharacterData member in party.Members)
-            {
-                if (characters.Contains(member))
-                {
-                    return $"{GetMainMark(member)}{member.Name} ({party.Number}파티)";
-                }
-            }
-        }
-
-        return "—";
-    }
-
-    private static string GetMainMark(CharacterData character)
-    {
-        return character.IsMain ? "★" : string.Empty;
     }
 
     private string GetClassName(CharacterData character)
