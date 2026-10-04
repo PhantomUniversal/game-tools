@@ -20,7 +20,7 @@ public class PartyCardViewModel : ViewModelBase
         Members = party.Members
             .Select(member => CreateRow(member, data, hasSupport))
             .ToList();
-        Summary = $"{party.Members.Count}명 · 합계 {party.TotalCombatPower / 1000.0:0.0}k";
+        Summary = $"{party.Members.Count}명 · 합계 {party.TotalCombatPower / 1000.0:0.0}k" + (party.UnknownCount > 0 ? $" · 미입력 {party.UnknownCount}명" : string.Empty);
     }
 
     private static MemberRowViewModel CreateRow(CharacterData member, GameDataTable data, bool hasSupport)

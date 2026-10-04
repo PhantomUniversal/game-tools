@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Aion2Tools.Models;
 using Aion2Tools.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,12 +8,18 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>The character list both composition tabs read from. Saved on every edit.</summary>
+/// <summary>The roster as numbered groups. The saved list stays flat (number + main flag); the groups are rebuilt from it after each change.</summary>
 public partial class RosterViewModel : ViewModelBase
 {
     private GameDataTable _data;
 
-    public ObservableCollection<CharacterData> Characters => SettingsService.Settings.Characters;
+    private ObservableCollection<CharacterData> Characters => SettingsService.Settings.Characters;
+
+    public ObservableCollection<PlayerGroupViewModel> Groups { get; } = new ObservableCollection<PlayerGroupViewModel>();
+
+    public bool CanAddGroup => Groups.Count < CharacterData.MAX_NUMBER;
+
+    public string AddGroupText => $"+  그룹 추가 ({Groups.Count}/{CharacterData.MAX_NUMBER})";
 
     [ObservableProperty]
     public partial IReadOnlyList<ClassRecord> Classes { get; set; }
@@ -28,6 +34,8 @@ public partial class RosterViewModel : ViewModelBase
     {
         _data = data;
         Classes = data.Classes;
+        RosterService.NormalizeMains(Characters);
+        RebuildGroups();
     }
 
     public void SetData(GameDataTable data)
@@ -36,19 +44,44 @@ public partial class RosterViewModel : ViewModelBase
         Classes = data.Classes;
     }
 
+    /// <summary>A new group takes the lowest free number and starts with its main.</summary>
     [RelayCommand]
-    private void Add()
+    private void AddGroup()
     {
-        CharacterData character = new CharacterData();
-        character.Number = GetNextNumber();
-        character.ClassId = _data.Classes[0].Id;
-        Characters.Add(character);
+        if (!CanAddGroup)
+        {
+            return;
+        }
+
+        HashSet<int> used = Groups.Select(group => group.Number).ToHashSet();
+        int number = Enumerable.Range(CharacterData.MIN_NUMBER, CharacterData.MAX_NUMBER).First(candidate => !used.Contains(candidate));
+        Characters.Add(CreateCharacter(number, true));
+        RebuildGroups();
     }
 
     [RelayCommand]
-    private void Remove(CharacterData character)
+    private void RemoveGroup(PlayerGroupViewModel group)
     {
-        Characters.Remove(character);
+        foreach (CharacterData character in Characters.Where(character => character.Number == group.Number).ToList())
+        {
+            Characters.Remove(character);
+        }
+
+        RebuildGroups();
+    }
+
+    [RelayCommand]
+    private void AddAlt(PlayerGroupViewModel group)
+    {
+        Characters.Add(CreateCharacter(group.Number, false));
+        RebuildGroups();
+    }
+
+    [RelayCommand]
+    private void RemoveAlt(CharacterRowViewModel row)
+    {
+        Characters.Remove(row.Character);
+        RebuildGroups();
     }
 
     [RelayCommand]
@@ -61,6 +94,8 @@ public partial class RosterViewModel : ViewModelBase
             Characters.Add(character);
         }
 
+        RosterService.NormalizeMains(Characters);
+        RebuildGroups();
         StatusText = skipped > 0 ? $"{parsed.Count}명 추가 · {skipped}줄은 형식이 맞지 않아 건너뜀" : $"{parsed.Count}명 추가";
         if (skipped == 0)
         {
@@ -84,19 +119,31 @@ public partial class RosterViewModel : ViewModelBase
     private void Clear()
     {
         Characters.Clear();
+        RebuildGroups();
         StatusText = "명단을 비웠습니다.";
     }
 
-    /// <summary>One past the highest number in use, so a new row starts as a new person. Capped at the maximum.</summary>
-    private int GetNextNumber()
+    private CharacterData CreateCharacter(int number, bool isMain)
     {
-        int highest = 0;
-        foreach (CharacterData character in Characters)
+        CharacterData character = new CharacterData();
+        character.Number = number;
+        character.IsMain = isMain;
+        character.ClassId = _data.Classes[0].Id;
+        return character;
+    }
+
+    private void RebuildGroups()
+    {
+        Groups.Clear();
+        foreach (IGrouping<int, CharacterData> group in Characters.GroupBy(character => character.Number).OrderBy(group => group.Key))
         {
-            highest = Math.Max(highest, character.Number);
+            CharacterRowViewModel main = new CharacterRowViewModel(group.First(character => character.IsMain));
+            List<CharacterRowViewModel> alts = group.Where(character => !character.IsMain).Select(character => new CharacterRowViewModel(character)).ToList();
+            Groups.Add(new PlayerGroupViewModel(group.Key, main, alts));
         }
 
-        return Math.Clamp(highest + 1, CharacterData.MIN_NUMBER, CharacterData.MAX_NUMBER);
+        OnPropertyChanged(nameof(CanAddGroup));
+        OnPropertyChanged(nameof(AddGroupText));
     }
 
     private void SetSelected(bool isSelected)

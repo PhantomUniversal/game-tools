@@ -5,11 +5,56 @@
              xmlns:views="using:Aion2Tools.Views"
              x:Class="Aion2Tools.Views.Pages.RosterView"
              x:DataType="vm:RosterViewModel">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+
+    <UserControl.Styles>
+        <!-- The box that creates a group: a plain solid outline with a plus. -->
+        <Style Selector="Button.addBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+        <Style Selector="Button.addBox:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.DataTemplates>
+        <!-- One character row; the main has no delete button, it goes with its group. -->
+        <DataTemplate DataType="vm:CharacterRowViewModel">
+            <Grid ColumnDefinitions="50,60,170,150,120,120,50" Margin="0,2">
+                <CheckBox Grid.Column="0" IsChecked="{Binding Character.IsSelected}" />
+                <TextBlock Grid.Column="1" Text="{Binding KindText}" VerticalAlignment="Center" Classes="muted" />
+                <TextBox Grid.Column="2" Text="{Binding Character.Name}" PlaceholderText="캐릭터 이름" Margin="0,0,6,0" />
+                <ComboBox Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,6,0"
+                          ItemsSource="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).Classes}"
+                          SelectedValueBinding="{Binding Id, DataType=models:ClassRecord}"
+                          SelectedValue="{Binding Character.ClassId, Converter={x:Static views:IgnoreNullConverter.Instance}}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="models:ClassRecord">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox Grid.Column="4" Text="{Binding CombatPowerText}" Margin="0,0,6,0" />
+                <TextBox Grid.Column="5" Text="{Binding ItemLevelText}" Margin="0,0,6,0" />
+                <Button Grid.Column="6" Content="✕" IsVisible="{Binding !Character.IsMain}"
+                        Command="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).RemoveAltCommand}"
+                        CommandParameter="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Text="캐릭터 명단" Classes="h1" Margin="0,0,0,12" />
 
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">
-            <Button Content="+ 추가" Classes="accent" Command="{Binding AddCommand}" Margin="0,0,8,6" />
             <Button Content="전체 참가" Command="{Binding SelectAllCommand}" Margin="0,0,8,6" />
             <Button Content="전체 해제" Command="{Binding SelectNoneCommand}" Margin="0,0,8,6" />
             <Button Content="비우기" Command="{Binding ClearCommand}" Margin="0,0,8,6" />
@@ -17,53 +62,55 @@
 
         <TextBlock Grid.Row="2" Text="{Binding StatusText}" Classes="muted" Margin="0,0,0,8" />
 
-        <Grid Grid.Row="3" ColumnDefinitions="50,130,150,140,110,100,60,50" Margin="4,0,0,4">
-            <TextBlock Grid.Column="0" Text="참가" Classes="muted" />
-            <TextBlock Grid.Column="1" Text="번호 (1~100)" Classes="muted" />
-            <TextBlock Grid.Column="2" Text="캐릭터" Classes="muted" />
-            <TextBlock Grid.Column="3" Text="클래스" Classes="muted" />
-            <TextBlock Grid.Column="4" Text="전투력" Classes="muted" />
-            <TextBlock Grid.Column="5" Text="아이템 Lv" Classes="muted" />
-            <TextBlock Grid.Column="6" Text="본캐" Classes="muted" />
-        </Grid>
+        <ScrollViewer Grid.Row="3">
+            <StackPanel Spacing="12" MaxWidth="820" HorizontalAlignment="Left">
+                <ItemsControl ItemsSource="{Binding Groups}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="12" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:PlayerGroupViewModel">
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10"
+                                    Background="{StaticResource PanelBrush}" Padding="14,10">
+                                <StackPanel Spacing="4">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Title}" Classes="h2" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Content="그룹 삭제"
+                                                Command="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).RemoveGroupCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="50,60,170,150,120,120,50" Margin="0,4,0,0">
+                                        <TextBlock Grid.Column="0" Text="참가" Classes="muted" FontSize="12" />
+                                        <TextBlock Grid.Column="1" Text="구분" Classes="muted" FontSize="12" />
+                                        <TextBlock Grid.Column="2" Text="캐릭터" Classes="muted" FontSize="12" />
+                                        <TextBlock Grid.Column="3" Text="클래스" Classes="muted" FontSize="12" />
+                                        <TextBlock Grid.Column="4" Text="전투력" Classes="muted" FontSize="12" />
+                                        <TextBlock Grid.Column="5" Text="아이템 레벨" Classes="muted" FontSize="12" />
+                                    </Grid>
+                                    <ContentControl Content="{Binding Main}" />
+                                    <ItemsControl ItemsSource="{Binding Alts}" />
+                                    <Button Content="+  부캐 추가" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                            Command="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).AddAltCommand}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-        <ScrollViewer Grid.Row="4">
-            <ItemsControl ItemsSource="{Binding Characters}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="models:CharacterData">
-                        <Grid ColumnDefinitions="50,130,150,140,110,100,60,50" Margin="4,2">
-                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" />
-                            <NumericUpDown Grid.Column="1" Value="{Binding Number, Converter={x:Static views:IgnoreNullConverter.Instance}}"
-                                           Minimum="1" Maximum="100" FormatString="0" Margin="0,0,6,0" />
-                            <TextBox Grid.Column="2" Text="{Binding Name}" Margin="0,0,6,0" />
-                            <ComboBox Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,6,0"
-                                      ItemsSource="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).Classes}"
-                                      SelectedValueBinding="{Binding Id, DataType=models:ClassRecord}"
-                                      SelectedValue="{Binding ClassId, Converter={x:Static views:IgnoreNullConverter.Instance}}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate DataType="models:ClassRecord">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <TextBox Grid.Column="4" Text="{Binding CombatPower}" Margin="0,0,6,0" />
-                            <TextBox Grid.Column="5" Text="{Binding ItemLevel}" Margin="0,0,6,0" />
-                            <CheckBox Grid.Column="6" IsChecked="{Binding IsMain}" />
-                            <Button Grid.Column="7" Content="✕"
-                                    Command="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).RemoveCommand}"
-                                    CommandParameter="{Binding}" />
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                <Button Classes="addBox" Content="{Binding AddGroupText}" Command="{Binding AddGroupCommand}"
+                        IsVisible="{Binding CanAddGroup}" />
+            </StackPanel>
         </ScrollViewer>
 
-        <Expander Grid.Row="5" Header="표 / CSV 붙여넣기" Margin="0,10,0,0" HorizontalAlignment="Stretch">
+        <Expander Grid.Row="4" Header="표 / CSV 붙여넣기" Margin="0,10,0,0" HorizontalAlignment="Stretch">
             <StackPanel Spacing="8">
                 <TextBlock Classes="muted" TextWrapping="Wrap"
-                           Text="한 줄에 한 캐릭터: 번호(1~100), 캐릭터, 클래스(이름 또는 id), 전투력, 아이템 레벨, 본캐(Y/N). 쉼표나 탭(스프레드시트 복사) 모두 됩니다." />
+                           Text="한 줄에 한 캐릭터: 번호(1~10), 캐릭터, 클래스(이름 또는 id), 전투력, 아이템 레벨, 본캐(Y/N). 전투력 · 아이템 레벨은 - 로 비워 둘 수 있고, 쉼표나 탭(스프레드시트 복사) 모두 됩니다." />
                 <TextBox Text="{Binding ImportText}" AcceptsReturn="True" Height="120"
-                         PlaceholderText="1, 철벽, 수호성, 36210, 3820, Y" />
+                         PlaceholderText="1, 철벽, 수호성, 36210, -, Y" />
                 <Button Content="가져오기" Classes="accent" Command="{Binding ImportCommand}" />
             </StackPanel>
         </Expander>

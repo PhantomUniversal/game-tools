@@ -90,6 +90,27 @@ public class PartyServiceTests
     }
 
     [Fact]
+    public void Compose_ValuesNotEntered_PassTheCuts()
+    {
+        List<CharacterData> roster = CreateRaidRoster();
+        foreach (CharacterData character in roster)
+        {
+            character.CombatPower = null;
+            character.ItemLevel = null;
+        }
+
+        PresetRecord preset = new PresetRecord();
+        preset.PartyCount = 2;
+        preset.PartySize = 5;
+        preset.MinItemLevel = 4500;
+        preset.MinCombatPower = 50000;
+        PartyResultModel result = ComposeBest(roster, preset);
+
+        Assert.Equal(10, result.Parties.Sum(party => party.Members.Count));
+        Assert.All(result.Bench, bench => Assert.Equal("정원 초과", bench.Reason));
+    }
+
+    [Fact]
     public void Compose_NobodyEligible_ReturnsEmpty()
     {
         CharacterData unknown = Create(1, "무명", "unknown-class", 30000);

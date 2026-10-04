@@ -41,7 +41,8 @@ public class PartyResultViewModel : ViewModelBase
             foreach (CharacterData member in party.Members)
             {
                 ClassRecord record = _data.GetClassOrNull(member.ClassId)!;
-                text.AppendLine($"- {MemberRowViewModel.GetRoleText(record.Role)} {member.Name} ({record.Name}) {member.CombatPower:N0}");
+                string combatPower = member.CombatPower.HasValue ? member.CombatPower.Value.ToString("N0") : "-";
+                text.AppendLine($"- {MemberRowViewModel.GetRoleText(record.Role)} {member.Name} ({record.Name}) {combatPower}");
             }
         }
 

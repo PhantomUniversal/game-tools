@@ -41,7 +41,8 @@ public static class PartyService
             return Array.Empty<PartyResultModel>();
         }
 
-        Scorer scorer = new Scorer(eligible, preset, data);
+        double estimate = GetEstimatedCombatPower(eligible);
+        Scorer scorer = new Scorer(eligible, preset, data, estimate);
         Random random = new Random(seed);
         Dictionary<string, int[]> found = new Dictionary<string, int[]>();
         for (int restart = 0; restart < RESTART_COUNT; restart++)
@@ -54,7 +55,7 @@ public static class PartyService
         return found.Values
             .OrderByDescending(groups => scorer.Score(groups))
             .Take(alternativeCount)
-            .Select(groups => BuildResult(groups, eligible, cut, scorer, preset, data))
+            .Select(groups => BuildResult(groups, eligible, cut, scorer, preset, data, estimate))
             .ToList();
     }
 
@@ -65,17 +66,34 @@ public static class PartyService
             return "클래스 미지정";
         }
 
-        if (character.ItemLevel < preset.MinItemLevel)
+        if (character.ItemLevel.HasValue && character.ItemLevel.Value < preset.MinItemLevel)
         {
-            return $"아이템 레벨 미달 ({character.ItemLevel:N0} < {preset.MinItemLevel:N0})";
+            return $"아이템 레벨 미달 ({character.ItemLevel.Value:N0} < {preset.MinItemLevel:N0})";
         }
 
-        if (character.CombatPower < preset.MinCombatPower)
+        if (character.CombatPower.HasValue && character.CombatPower.Value < preset.MinCombatPower)
         {
-            return $"전투력 미달 ({character.CombatPower:N0} < {preset.MinCombatPower:N0})";
+            return $"전투력 미달 ({character.CombatPower.Value:N0} < {preset.MinCombatPower:N0})";
         }
 
         return string.Empty;
+    }
+
+    /// <summary>What a character with no combat power entered counts as: the average of those entered, 0 if none.</summary>
+    private static double GetEstimatedCombatPower(List<CharacterData> characters)
+    {
+        List<int> known = characters.Where(character => character.CombatPower.HasValue).Select(character => character.CombatPower!.Value).ToList();
+        if (known.Count == 0)
+        {
+            return 0;
+        }
+
+        return known.Average();
+    }
+
+    private static double GetCombatPower(CharacterData character, double estimate)
+    {
+        return character.CombatPower.HasValue ? character.CombatPower.Value : estimate;
     }
 
     /// <summary>A shuffled order poured into the parties one seat at a time; whoever is left sits on the bench.</summary>
@@ -203,7 +221,7 @@ public static class PartyService
     // << RESULT >>
     // ─────────────────────────────────────────────────────────────────────────
     private static PartyResultModel BuildResult(
-        int[] groups, List<CharacterData> eligible, List<BenchModel> cut, Scorer scorer, PresetRecord preset, GameDataTable data)
+        int[] groups, List<CharacterData> eligible, List<BenchModel> cut, Scorer scorer, PresetRecord preset, GameDataTable data, double estimate)
     {
         List<PartyModel> parties = new List<PartyModel>();
         for (int party = 0; party < preset.PartyCount; party++)
@@ -219,7 +237,7 @@ public static class PartyService
 
             List<CharacterData> ordered = members
                 .OrderBy(member => GetSeatOrder(data.GetClassOrNull(member.ClassId)))
-                .ThenByDescending(member => member.CombatPower)
+                .ThenByDescending(member => GetCombatPower(member, estimate))
                 .ToList();
             parties.Add(new PartyModel(party + 1, ordered));
         }
@@ -234,7 +252,7 @@ public static class PartyService
         }
 
         bench.AddRange(cut);
-        return new PartyResultModel(parties, bench, scorer.Score(groups), BuildChecks(parties, preset, data));
+        return new PartyResultModel(parties, bench, scorer.Score(groups), BuildChecks(parties, preset, data, estimate));
     }
 
     /// <summary>Tank first, healer last, as a party list is read out.</summary>
@@ -262,7 +280,7 @@ public static class PartyService
         }
     }
 
-    private static List<string> BuildChecks(List<PartyModel> parties, PresetRecord preset, GameDataTable data)
+    private static List<string> BuildChecks(List<PartyModel> parties, PresetRecord preset, GameDataTable data, double estimate)
     {
         List<string> checks = new List<string>();
         Dictionary<int, int> players = new Dictionary<int, int>();
@@ -370,7 +388,14 @@ public static class PartyService
 
         if (parties.Count > 1 && parties.All(party => party.Members.Count > 0))
         {
-            checks.Add($"전투력 차이 {GetSpreadPercent(parties.Select(party => (double)party.TotalCombatPower).ToList()):0.0}%");
+            List<double> totals = parties.Select(party => party.Members.Sum(member => GetCombatPower(member, estimate))).ToList();
+            checks.Add($"전투력 차이 {GetSpreadPercent(totals):0.0}%");
+        }
+
+        int unknown = parties.Sum(party => party.UnknownCount);
+        if (unknown > 0)
+        {
+            checks.Add($"전투력 미입력 {unknown}명은 평균 {estimate / 1000:0.0}k로 계산");
         }
 
         return checks;
@@ -397,15 +422,15 @@ public static class PartyService
     {
         private readonly ClassRecord[] _classes;
         private readonly int[] _players;
-        private readonly int[] _combatPowers;
+        private readonly double[] _combatPowers;
         private readonly PresetRecord _preset;
         private readonly WeightsRecord _weights;
 
-        public Scorer(List<CharacterData> eligible, PresetRecord preset, GameDataTable data)
+        public Scorer(List<CharacterData> eligible, PresetRecord preset, GameDataTable data, double estimate)
         {
             _classes = eligible.Select(character => data.GetClassOrNull(character.ClassId)!).ToArray();
             _players = eligible.Select(character => character.Number).ToArray();
-            _combatPowers = eligible.Select(character => character.CombatPower).ToArray();
+            _combatPowers = eligible.Select(character => GetCombatPower(character, estimate)).ToArray();
             _preset = preset;
             _weights = data.Weights;
         }
