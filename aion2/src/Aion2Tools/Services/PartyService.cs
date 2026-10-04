@@ -59,7 +59,8 @@ public static class PartyService
             .ToList();
     }
 
-    private static string GetCutReason(CharacterData character, PresetRecord preset, GameDataTable data)
+    /// <summary>Why a character cannot join this content, or empty when it can.</summary>
+    public static string GetCutReason(CharacterData character, PresetRecord preset, GameDataTable data)
     {
         if (data.GetClassOrNull(character.ClassId) is null)
         {

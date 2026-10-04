@@ -86,10 +86,12 @@
                 <ContentControl Content="{Binding Preset}" Margin="0,0,16,8" />
                 <StackPanel Margin="0,0,16,8">
                     <TextBlock Text="회차" Classes="fieldLabel" />
-                    <NumericUpDown Value="{Binding RunCount}" Minimum="1" Maximum="10" FormatString="0" Width="110" />
+                    <NumericUpDown Value="{Binding RunCount}" Minimum="1" Maximum="20" FormatString="0" Width="110" />
                 </StackPanel>
-                <CheckBox Content="본캐 1회차 몰아주기" IsChecked="{Binding IsMainFirst}"
-                          IsVisible="{Binding IsRotation}" VerticalAlignment="Bottom" Margin="0,0,0,14" />
+                <StackPanel Margin="0,0,16,8" IsVisible="{Binding IsRotation}">
+                    <TextBlock Text="본캐 출전 횟수" Classes="fieldLabel" />
+                    <NumericUpDown Value="{Binding MainRunCount}" Minimum="0" Maximum="20" FormatString="0" Width="110" />
+                </StackPanel>
             </WrapPanel>
 
             <StackPanel Grid.Row="2" IsVisible="{Binding HasAlternatives}" Margin="0,0,0,16">

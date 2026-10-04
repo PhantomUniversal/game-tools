@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Aion2Tools.Models;
 using Aion2Tools.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,7 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Aion2Tools.ViewModels;
 
 /// <summary>The party tab: pick a profile and the member cards that join, then compose.
-/// One run gives up to three alternative compositions; more runs give a main/alt rotation.</summary>
+/// One run gives up to three alternative compositions; more runs give a main/alt rotation where each main plays a set number of runs.</summary>
 public partial class PartyViewModel : ViewModelBase
 {
     private const int ALTERNATIVE_COUNT = 3;
@@ -39,8 +40,9 @@ public partial class PartyViewModel : ViewModelBase
 
     public bool IsRotation => GetRunCount() > 1;
 
+    /// <summary>How many runs each main plays in a rotation; their alts fill the rest.</summary>
     [ObservableProperty]
-    public partial bool IsMainFirst { get; set; } = true;
+    public partial decimal? MainRunCount { get; set; } = 2;
 
     public ObservableCollection<PartyResultViewModel> Results { get; } = new ObservableCollection<PartyResultViewModel>();
 
@@ -146,7 +148,7 @@ public partial class PartyViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Compose()
+    private async Task Compose()
     {
         ClearResults();
         if (SelectedProfileOrNull is null)
@@ -166,7 +168,7 @@ public partial class PartyViewModel : ViewModelBase
         PresetRecord preset = Preset.CreateEffective();
         if (IsRotation)
         {
-            ComposeRotation(characters, preset);
+            await ComposeRotation(characters, preset);
             return;
         }
 
@@ -192,9 +194,14 @@ public partial class PartyViewModel : ViewModelBase
         ClearResults();
     }
 
-    private void ComposeRotation(List<CharacterData> characters, PresetRecord preset)
+    /// <summary>Off the UI thread: the rotation search can take a few seconds on a large roster.</summary>
+    private async Task ComposeRotation(List<CharacterData> characters, PresetRecord preset)
     {
-        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(characters, preset, _data, GetRunCount(), IsMainFirst, SEED);
+        int runCount = GetRunCount();
+        int mainRunCount = MainRunCount.HasValue ? (int)MainRunCount.Value : 0;
+        GameDataTable data = _data;
+        StatusText = "로테이션 계산 중…";
+        IReadOnlyList<PartyResultModel> runs = await Task.Run(() => RotationService.Compose(characters, preset, data, runCount, mainRunCount, SEED));
         if (runs.Count == 0)
         {
             StatusText = "편성할 수 있는 캐릭터가 없습니다.";
@@ -214,7 +221,8 @@ public partial class PartyViewModel : ViewModelBase
 
         HasRuns = true;
         int seated = runs.Sum(run => run.Parties.Sum(party => party.Members.Count));
-        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 / 캐릭터 {characters.Count}개";
+        int mainSeats = runs.Sum(run => run.Parties.Sum(party => party.Members.Count(member => member.IsMain)));
+        StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 (본캐 {mainSeats} · 부캐 {seated - mainSeats})";
     }
 
     private void ClearResults()

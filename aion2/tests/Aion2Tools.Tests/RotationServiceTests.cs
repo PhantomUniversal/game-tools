@@ -11,32 +11,83 @@ public class RotationServiceTests
     private static readonly GameDataTable DATA = GameDataService.LoadBuiltIn();
 
     [Fact]
-    public void Compose_MainFirst_PutsOnlyMainsInFirstRun()
+    public void Compose_FiveMainsAndAltsOverTenExpeditions_EachMainPlaysTwiceAndEveryRunHasOneMain()
     {
-        IReadOnlyList<PartyResultModel> runs = ComposeRoster(true);
+        PresetRecord preset = DATA.Presets.Single(record => record.Id == "expedition");
 
-        List<CharacterData> firstRun = runs[0].Parties.SelectMany(party => party.Members).ToList();
-        Assert.All(firstRun, member => Assert.True(member.IsMain));
-    }
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateFivePlayers(), preset, DATA, 10, 2, 0);
 
-    [Fact]
-    public void Compose_ThreeRuns_UsesNoCharacterTwiceAndOnePerNumberPerRun()
-    {
-        IReadOnlyList<PartyResultModel> runs = ComposeRoster(false);
+        Assert.Equal(10, runs.Count);
+        List<CharacterData> seated = runs.SelectMany(GetMembers).ToList();
+        foreach (CharacterData main in seated.Where(member => member.IsMain).Distinct())
+        {
+            Assert.Equal(2, seated.Count(member => member == main));
+        }
 
-        List<CharacterData> all = runs.SelectMany(run => run.Parties.SelectMany(party => party.Members)).ToList();
-        Assert.Equal(all.Count, all.Distinct().Count());
         foreach (PartyResultModel run in runs)
         {
-            List<int> numbers = run.Parties.SelectMany(party => party.Members).Select(member => member.Number).ToList();
-            Assert.Equal(numbers.Count, numbers.Distinct().Count());
+            List<CharacterData> members = GetMembers(run);
+            Assert.Equal(5, members.Count);
+            Assert.Equal(5, members.Select(member => member.Number).Distinct().Count());
+            Assert.Equal(1, members.Count(member => member.IsMain));
         }
     }
 
-    private static IReadOnlyList<PartyResultModel> ComposeRoster(bool isMainFirst)
+    [Fact]
+    public void Compose_TwoRuns_MixesMainsAndAltsInEachRun()
+    {
+        PresetRecord preset = DATA.Presets.Single(record => record.Id == "expedition");
+
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateFivePlayers(), preset, DATA, 2, 1, 0);
+
+        Assert.Equal(2, runs.Count);
+        foreach (PartyResultModel run in runs)
+        {
+            List<CharacterData> members = GetMembers(run);
+            Assert.Contains(members, member => member.IsMain);
+            Assert.Contains(members, member => !member.IsMain);
+        }
+    }
+
+    [Fact]
+    public void Compose_MoreNumbersThanSeats_SeatsOnePerNumberAndSpreadsPlays()
     {
         PresetRecord preset = DATA.Presets.Single(record => record.Id == "sanctuary-rudra");
-        return RotationService.Compose(CreateRoster(), preset, DATA, 3, isMainFirst, 0);
+
+        IReadOnlyList<PartyResultModel> runs = RotationService.Compose(CreateRoster(), preset, DATA, 3, 1, 0);
+
+        Assert.Equal(3, runs.Count);
+        foreach (PartyResultModel run in runs)
+        {
+            List<int> numbers = GetMembers(run).Select(member => member.Number).ToList();
+            Assert.Equal(numbers.Count, numbers.Distinct().Count());
+            Assert.True(numbers.Count <= 10);
+        }
+
+        List<CharacterData> seated = runs.SelectMany(GetMembers).ToList();
+        Assert.All(seated.Where(member => member.IsMain).Distinct(), main => Assert.Equal(1, seated.Count(member => member == main)));
+    }
+
+    private static List<CharacterData> GetMembers(PartyResultModel run)
+    {
+        return run.Parties.SelectMany(party => party.Members).ToList();
+    }
+
+    /// <summary>Five numbers, each a main and one alt, enough tanks and healers to go around.</summary>
+    private static List<CharacterData> CreateFivePlayers()
+    {
+        List<CharacterData> characters = new List<CharacterData>();
+        Add(characters, 1, "철벽", "guardian", 36210, 3820, true);
+        Add(characters, 1, "보조", "cleric", 28400, 3100, false);
+        Add(characters, 2, "그림자", "assassin", 38050, 4010, true);
+        Add(characters, 2, "방패", "gladiator", 27100, 3050, false);
+        Add(characters, 3, "새벽", "cleric", 32400, 3500, true);
+        Add(characters, 3, "마나", "sorcerer", 29800, 3200, false);
+        Add(characters, 4, "수호천사", "chanter", 35500, 3700, true);
+        Add(characters, 4, "번개", "assassin", 26600, 2950, false);
+        Add(characters, 5, "주먹왕", "fighter", 34800, 3650, true);
+        Add(characters, 5, "주문", "chanter", 27900, 3000, false);
+        return characters;
     }
 
     /// <summary>Twelve numbers with their mains and alts, 22 characters in all.</summary>
