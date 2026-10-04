@@ -27,7 +27,7 @@ public class MemberRowViewModel : ViewModelBase
         RoleText = GetRoleText(record.Role);
         RoleBrush = GetRoleBrush(record.Role);
         Name = (character.IsMain ? "★ " : string.Empty) + character.Name + (isBuffed ? " ⚡" : string.Empty);
-        Detail = character.Player.Length > 0 ? $"{record.Name} · {character.Player}" : record.Name;
+        Detail = $"{record.Name} · {character.Number}번";
         CombatPowerText = $"{character.CombatPower / 1000.0:0.0}k";
     }
 

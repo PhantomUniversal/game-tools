@@ -21,7 +21,7 @@
                 <Border Classes="card">
                     <StackPanel Spacing="4">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="플레이어" Width="90" Classes="muted" />
+                            <TextBlock Text="번호" Width="90" Classes="muted" />
                             <TextBlock Text="캐릭터 (★ 본캐)" Width="300" Classes="muted" />
                             <ItemsControl ItemsSource="{Binding RunHeaders}">
                                 <ItemsControl.ItemsPanel>
@@ -41,7 +41,7 @@
                                 <DataTemplate DataType="vm:RotationRowViewModel">
                                     <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,5">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Player}" Width="90" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding Number}" Width="90" FontWeight="Bold" />
                                             <TextBlock Text="{Binding Characters}" Width="300" TextWrapping="Wrap" Classes="muted" Margin="0,0,10,0" />
                                             <ItemsControl ItemsSource="{Binding Cells}">
                                                 <ItemsControl.ItemsPanel>

@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Aion2Tools.ViewModels;
 
-/// <summary>Tab 2 (본부 조합): mains and alts spread over several runs, one character per player per run.</summary>
+/// <summary>Tab 2 (본부 조합): mains and alts spread over several runs, one character per number per run.</summary>
 public partial class RotationViewModel : ViewModelBase
 {
     private const int SEED = 0;
@@ -65,7 +65,7 @@ public partial class RotationViewModel : ViewModelBase
             Runs.Add(new PartyResultViewModel($"{index + 1}회차", runs[index], _data));
         }
 
-        foreach (IGrouping<string, CharacterData> player in selected.GroupBy(character => character.Player.Trim()))
+        foreach (IGrouping<int, CharacterData> player in selected.GroupBy(character => character.Number).OrderBy(group => group.Key))
         {
             Rows.Add(CreateRow(player.Key, player.ToList(), runs));
         }
@@ -74,7 +74,7 @@ public partial class RotationViewModel : ViewModelBase
         StatusText = $"{runs.Count}회차 편성 · 출전 {seated}회 / 참가 캐릭터 {selected.Count}개";
     }
 
-    private RotationRowViewModel CreateRow(string player, List<CharacterData> characters, IReadOnlyList<PartyResultModel> runs)
+    private RotationRowViewModel CreateRow(int number, List<CharacterData> characters, IReadOnlyList<PartyResultModel> runs)
     {
         List<string> cells = new List<string>();
         foreach (PartyResultModel run in runs)
@@ -85,7 +85,7 @@ public partial class RotationViewModel : ViewModelBase
         IEnumerable<string> names = characters
             .OrderByDescending(character => character.IsMain)
             .Select(character => GetMainMark(character) + character.Name + "(" + GetClassName(character) + ")");
-        return new RotationRowViewModel(player.Length > 0 ? player : "(플레이어 없음)", string.Join(", ", names), cells);
+        return new RotationRowViewModel($"{number}번", string.Join(", ", names), cells);
     }
 
     /// <summary>The character this player brings to the run, or a dash.</summary>

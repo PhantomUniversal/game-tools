@@ -45,16 +45,16 @@ public class PartyServiceTests
     {
         List<CharacterData> roster = new List<CharacterData>
         {
-            Create("A", "탱1", "guardian", 30000),
-            Create("B", "탱2", "gladiator", 30000),
-            Create("C", "힐1", "cleric", 30000),
-            Create("D", "힐2", "cleric", 30000),
-            Create("E", "호법", "chanter", 30000),
-            Create("F", "살성", "assassin", 30000),
-            Create("G", "궁성1", "ranger", 30000),
-            Create("H", "궁성2", "ranger", 30000),
-            Create("I", "정령1", "spiritmaster", 30000),
-            Create("J", "정령2", "spiritmaster", 30000),
+            Create(1, "탱1", "guardian", 30000),
+            Create(2, "탱2", "gladiator", 30000),
+            Create(3, "힐1", "cleric", 30000),
+            Create(4, "힐2", "cleric", 30000),
+            Create(5, "호법", "chanter", 30000),
+            Create(6, "살성", "assassin", 30000),
+            Create(7, "궁성1", "ranger", 30000),
+            Create(8, "궁성2", "ranger", 30000),
+            Create(9, "정령1", "spiritmaster", 30000),
+            Create(10, "정령2", "spiritmaster", 30000),
         };
 
         PartyResultModel result = ComposeBest(roster, GetPreset("sanctuary-rudra"));
@@ -64,22 +64,22 @@ public class PartyServiceTests
     }
 
     [Fact]
-    public void Compose_SamePlayerTwice_SeatsOnlyOneOfTheirCharacters()
+    public void Compose_SameNumberTwice_SeatsOnlyOneOfItsCharacters()
     {
         List<CharacterData> roster = CreateRaidRoster();
-        roster.Add(Create("A", "철벽 부캐", "assassin", 50000));
+        roster.Add(Create(1, "철벽 부캐", "assassin", 50000));
 
         PartyResultModel result = ComposeBest(roster, GetPreset("sanctuary-rudra"));
 
-        int seatedFromA = result.Parties.Sum(party => party.Members.Count(member => member.Player == "A"));
-        Assert.Equal(1, seatedFromA);
+        int seatedFromOne = result.Parties.Sum(party => party.Members.Count(member => member.Number == 1));
+        Assert.Equal(1, seatedFromOne);
     }
 
     [Fact]
     public void Compose_BelowItemLevel_IsBenchedWithReason()
     {
         List<CharacterData> roster = CreateRaidRoster();
-        CharacterData low = Create("Z", "초보", "ranger", 40000);
+        CharacterData low = Create(13, "초보", "ranger", 40000);
         low.ItemLevel = 1000;
         roster.Add(low);
 
@@ -92,7 +92,7 @@ public class PartyServiceTests
     [Fact]
     public void Compose_NobodyEligible_ReturnsEmpty()
     {
-        CharacterData unknown = Create("A", "무명", "unknown-class", 30000);
+        CharacterData unknown = Create(1, "무명", "unknown-class", 30000);
 
         IReadOnlyList<PartyResultModel> results = PartyService.Compose(new[] { unknown }, GetPreset("expedition"), DATA, 3, 0);
 
@@ -123,30 +123,30 @@ public class PartyServiceTests
         return party.Members.Count(member => DATA.GetClassOrNull(member.ClassId)!.Role == role);
     }
 
-    /// <summary>Twelve players: two of each tank, healer and chanter, six dealers.</summary>
+    /// <summary>Twelve numbers: two of each tank, healer and chanter, six dealers.</summary>
     private static List<CharacterData> CreateRaidRoster()
     {
         return new List<CharacterData>
         {
-            Create("A", "철벽", "guardian", 36000),
-            Create("B", "칼바람", "gladiator", 35000),
-            Create("C", "새벽", "cleric", 32000),
-            Create("D", "은하", "cleric", 31000),
-            Create("E", "수호천사", "chanter", 31000),
-            Create("F", "축복", "chanter", 30000),
-            Create("G", "그림자", "assassin", 38000),
-            Create("H", "불꽃", "sorcerer", 35000),
-            Create("I", "주먹왕", "fighter", 34000),
-            Create("J", "바람결", "spiritmaster", 32000),
-            Create("K", "별빛", "ranger", 33000),
-            Create("L", "초보", "ranger", 24000),
+            Create(1, "철벽", "guardian", 36000),
+            Create(2, "칼바람", "gladiator", 35000),
+            Create(3, "새벽", "cleric", 32000),
+            Create(4, "은하", "cleric", 31000),
+            Create(5, "수호천사", "chanter", 31000),
+            Create(6, "축복", "chanter", 30000),
+            Create(7, "그림자", "assassin", 38000),
+            Create(8, "불꽃", "sorcerer", 35000),
+            Create(9, "주먹왕", "fighter", 34000),
+            Create(10, "바람결", "spiritmaster", 32000),
+            Create(11, "별빛", "ranger", 33000),
+            Create(12, "초보", "ranger", 24000),
         };
     }
 
-    private static CharacterData Create(string player, string name, string classId, int combatPower)
+    private static CharacterData Create(int number, string name, string classId, int combatPower)
     {
         CharacterData character = new CharacterData();
-        character.Player = player;
+        character.Number = number;
         character.Name = name;
         character.ClassId = classId;
         character.CombatPower = combatPower;

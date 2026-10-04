@@ -10,7 +10,6 @@
 
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">
             <Button Content="+ 추가" Classes="accent" Command="{Binding AddCommand}" Margin="0,0,8,6" />
-            <Button Content="샘플 불러오기" Command="{Binding LoadSampleCommand}" Margin="0,0,8,6" />
             <Button Content="전체 참가" Command="{Binding SelectAllCommand}" Margin="0,0,8,6" />
             <Button Content="전체 해제" Command="{Binding SelectNoneCommand}" Margin="0,0,8,6" />
             <Button Content="비우기" Command="{Binding ClearCommand}" Margin="0,0,8,6" />
@@ -18,9 +17,9 @@
 
         <TextBlock Grid.Row="2" Text="{Binding StatusText}" Classes="muted" Margin="0,0,0,8" />
 
-        <Grid Grid.Row="3" ColumnDefinitions="50,100,150,140,110,100,60,50" Margin="4,0,0,4">
+        <Grid Grid.Row="3" ColumnDefinitions="50,130,150,140,110,100,60,50" Margin="4,0,0,4">
             <TextBlock Grid.Column="0" Text="참가" Classes="muted" />
-            <TextBlock Grid.Column="1" Text="플레이어" Classes="muted" />
+            <TextBlock Grid.Column="1" Text="번호 (1~100)" Classes="muted" />
             <TextBlock Grid.Column="2" Text="캐릭터" Classes="muted" />
             <TextBlock Grid.Column="3" Text="클래스" Classes="muted" />
             <TextBlock Grid.Column="4" Text="전투력" Classes="muted" />
@@ -32,9 +31,10 @@
             <ItemsControl ItemsSource="{Binding Characters}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="models:CharacterData">
-                        <Grid ColumnDefinitions="50,100,150,140,110,100,60,50" Margin="4,2">
+                        <Grid ColumnDefinitions="50,130,150,140,110,100,60,50" Margin="4,2">
                             <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" />
-                            <TextBox Grid.Column="1" Text="{Binding Player}" Margin="0,0,6,0" />
+                            <NumericUpDown Grid.Column="1" Value="{Binding Number, Converter={x:Static views:IgnoreNullConverter.Instance}}"
+                                           Minimum="1" Maximum="100" FormatString="0" Margin="0,0,6,0" />
                             <TextBox Grid.Column="2" Text="{Binding Name}" Margin="0,0,6,0" />
                             <ComboBox Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,6,0"
                                       ItemsSource="{Binding $parent[UserControl].((vm:RosterViewModel)DataContext).Classes}"
@@ -61,9 +61,9 @@
         <Expander Grid.Row="5" Header="표 / CSV 붙여넣기" Margin="0,10,0,0" HorizontalAlignment="Stretch">
             <StackPanel Spacing="8">
                 <TextBlock Classes="muted" TextWrapping="Wrap"
-                           Text="한 줄에 한 캐릭터: 플레이어, 캐릭터, 클래스(이름 또는 id), 전투력, 아이템 레벨, 본캐(Y/N). 쉼표나 탭(스프레드시트 복사) 모두 됩니다." />
+                           Text="한 줄에 한 캐릭터: 번호(1~100), 캐릭터, 클래스(이름 또는 id), 전투력, 아이템 레벨, 본캐(Y/N). 쉼표나 탭(스프레드시트 복사) 모두 됩니다." />
                 <TextBox Text="{Binding ImportText}" AcceptsReturn="True" Height="120"
-                         PlaceholderText="A, 철벽, 수호성, 36210, 3820, Y" />
+                         PlaceholderText="1, 철벽, 수호성, 36210, 3820, Y" />
                 <Button Content="가져오기" Classes="accent" Command="{Binding ImportCommand}" />
             </StackPanel>
         </Expander>

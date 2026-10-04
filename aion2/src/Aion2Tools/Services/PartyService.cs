@@ -265,7 +265,7 @@ public static class PartyService
     private static List<string> BuildChecks(List<PartyModel> parties, PresetRecord preset, GameDataTable data)
     {
         List<string> checks = new List<string>();
-        Dictionary<string, int> players = new Dictionary<string, int>();
+        Dictionary<int, int> players = new Dictionary<int, int>();
         Dictionary<string, int> debuffers = new Dictionary<string, int>();
         int buffDealers = 0;
         int buffedDealers = 0;
@@ -317,10 +317,7 @@ public static class PartyService
                     misplaced.Add($"{member.Name}({record.Name})은 {record.PreferredParty}파티 권장");
                 }
 
-                if (member.Player.Trim().Length > 0)
-                {
-                    players[member.Player.Trim()] = players.GetValueOrDefault(member.Player.Trim()) + 1;
-                }
+                players[member.Number] = players.GetValueOrDefault(member.Number) + 1;
             }
 
             buffDealers += partyBuffDealers;
@@ -365,10 +362,10 @@ public static class PartyService
             checks.Add("⚠ " + line);
         }
 
-        List<string> twice = players.Where(pair => pair.Value > 1).Select(pair => pair.Key).ToList();
+        List<string> twice = players.Where(pair => pair.Value > 1).Select(pair => $"{pair.Key}번").ToList();
         if (twice.Count > 0)
         {
-            checks.Add("⚠ 같은 플레이어 중복: " + string.Join(", ", twice));
+            checks.Add("⚠ 같은 번호 중복: " + string.Join(", ", twice));
         }
 
         if (parties.Count > 1 && parties.All(party => party.Members.Count > 0))
@@ -399,7 +396,7 @@ public static class PartyService
     private sealed class Scorer
     {
         private readonly ClassRecord[] _classes;
-        private readonly string[] _players;
+        private readonly int[] _players;
         private readonly int[] _combatPowers;
         private readonly PresetRecord _preset;
         private readonly WeightsRecord _weights;
@@ -407,7 +404,7 @@ public static class PartyService
         public Scorer(List<CharacterData> eligible, PresetRecord preset, GameDataTable data)
         {
             _classes = eligible.Select(character => data.GetClassOrNull(character.ClassId)!).ToArray();
-            _players = eligible.Select((character, index) => character.Player.Trim().Length > 0 ? character.Player.Trim() : "#" + index).ToArray();
+            _players = eligible.Select(character => character.Number).ToArray();
             _combatPowers = eligible.Select(character => character.CombatPower).ToArray();
             _preset = preset;
             _weights = data.Weights;
@@ -417,7 +414,7 @@ public static class PartyService
         {
             double score = 0;
             double[] totals = new double[_preset.PartyCount];
-            Dictionary<string, int> players = new Dictionary<string, int>();
+            Dictionary<int, int> players = new Dictionary<int, int>();
             Dictionary<string, int> debuffers = new Dictionary<string, int>();
 
             for (int party = 0; party < _preset.PartyCount; party++)

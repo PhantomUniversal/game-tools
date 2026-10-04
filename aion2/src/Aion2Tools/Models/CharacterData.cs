@@ -5,8 +5,12 @@ namespace Aion2Tools.Models;
 /// <summary>One roster character. Edited in place on the roster page, so it raises its own changes.</summary>
 public partial class CharacterData : ObservableObject
 {
+    public const int MIN_NUMBER = 1;
+    public const int MAX_NUMBER = 100;
+
+    /// <summary>Who plays this character. Characters sharing a number are one person's main and alts.</summary>
     [ObservableProperty]
-    public partial string Player { get; set; } = string.Empty;
+    public partial int Number { get; set; } = MIN_NUMBER;
 
     [ObservableProperty]
     public partial string Name { get; set; } = string.Empty;

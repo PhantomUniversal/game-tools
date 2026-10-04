@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Aion2Tools.Models;
@@ -39,6 +40,7 @@ public partial class RosterViewModel : ViewModelBase
     private void Add()
     {
         CharacterData character = new CharacterData();
+        character.Number = GetNextNumber();
         character.ClassId = _data.Classes[0].Id;
         Characters.Add(character);
     }
@@ -47,18 +49,6 @@ public partial class RosterViewModel : ViewModelBase
     private void Remove(CharacterData character)
     {
         Characters.Remove(character);
-    }
-
-    [RelayCommand]
-    private void LoadSample()
-    {
-        Characters.Clear();
-        foreach (CharacterData character in RosterService.CreateSample())
-        {
-            Characters.Add(character);
-        }
-
-        StatusText = $"샘플 {Characters.Count}명을 불러왔습니다.";
     }
 
     [RelayCommand]
@@ -95,6 +85,18 @@ public partial class RosterViewModel : ViewModelBase
     {
         Characters.Clear();
         StatusText = "명단을 비웠습니다.";
+    }
+
+    /// <summary>One past the highest number in use, so a new row starts as a new person. Capped at the maximum.</summary>
+    private int GetNextNumber()
+    {
+        int highest = 0;
+        foreach (CharacterData character in Characters)
+        {
+            highest = Math.Max(highest, character.Number);
+        }
+
+        return Math.Clamp(highest + 1, CharacterData.MIN_NUMBER, CharacterData.MAX_NUMBER);
     }
 
     private void SetSelected(bool isSelected)
